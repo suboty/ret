@@ -1,6 +1,10 @@
 from typing import List, Tuple
 
 
+class LexicalAnalyzerError(Exception):
+    pass
+
+
 class ObjectLength:
 
     def __init__(self):
@@ -145,7 +149,7 @@ class TokenMapper:
     def __encode_string(string):
         try:
             if len(string) > 1:
-                return [ord(x) for x in string]
+                return [ord(x) for x in string if x != ' ']
             else:
                 return ord(string)
         except TypeError:
@@ -201,6 +205,7 @@ class TokenMapper:
 
     def mapper(self, string):
         # TODO: add string representation
+        # TODO: add string validation
         _string = ObjectString(self.__encode_string(string + ' '))
         result_tokens = ResultTokens()
 
@@ -295,7 +300,7 @@ class TokenMapper:
         if result:
             return result
         else:
-            exit(1)
+            raise LexicalAnalyzerError(f'Error with lexical analyzer')
 
 
 re3_tokens = TokenMapper()
