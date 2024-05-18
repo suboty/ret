@@ -1,4 +1,4 @@
-from lexical_analyzer import re3_tokens as re3_tokenizer
+from relt.lexical_analyzer import re3_tokens as re3_tokenizer
 
 
 if __name__ == '__main__':
