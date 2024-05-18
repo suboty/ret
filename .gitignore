@@ -1,3 +1,5 @@
 .idea
 .venv
 *.env
+.pytest_cache
+project_requirements.txt
