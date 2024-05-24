@@ -8,7 +8,7 @@ class ErrorTestLexicalAnalyzer(Exception):
 
 
 class TestLexicalAnalyzer:
-    lexical_analyzer = LexicalAnalyzer()
+    lexical_analyzer = LexicalAnalyzer(syntax='python.re')
 
     def test_lexical_analysis(self):
         for data_ex in test_data:
