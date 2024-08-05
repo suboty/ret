@@ -1,13 +1,13 @@
 import logging
-from typing import Callable
+from typing import Callable, Union
 
-from relt.configs import logging_config
+from src.configs import logging_config
 
 
-class RELTLogger:
+class Logger:
     def __init__(self):
         self.logger = self.__get_logger()
-        self.logger.info('RELT logger is init')
+        self.logger.info('Logger is init')
 
     @staticmethod
     def __get_logger():
@@ -44,22 +44,23 @@ class RELTLogger:
     def error(
             self,
             message: str,
-            exc: Exception,
-            raise_exc: Callable,
+            exc: Union[Exception, str],
+            raise_exc: Callable = None,
             traceback: str = None,
     ):
         if traceback:
             self.logger.error(
-                f'### {message}. '
+                f'### {message}! '
                 f'Exception: {exc}. '
                 f'Traceback: {traceback}'
             )
         else:
             self.logger.error(
-                f'### Error: {message}. '
+                f'### Error: {message}! '
                 f'Exception: {exc}. '
             )
-        raise raise_exc(message)
+        if raise_exc:
+            raise raise_exc(message)
 
 
-logger = RELTLogger()
+logger = Logger()

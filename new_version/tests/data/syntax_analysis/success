@@ -1,0 +1,16 @@
+# --- INPUT OUTPUT
+
+# --- atoms
+['1.atom,a'] ('seq',('atom','a'))
+['1.atom,a','1.atom,b','1.atom,c','1.atom,d','1.atom,e'] ('seq',('atom','a'),('atom','b'),('atom','c'),('atom','d'),('atom','e'))
+
+# --- one-quantifiers and meta symbols
+['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any'] ('seq',('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',))
+
+# --- alternative groups
+['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any','1.alt','1.atom,d'] ('seq',('alt',(('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',)),(('atom','d'),)))
+['1.atom,a','1.atom,b','1.atom,c','1.start_group','1.atom,c','1.alt','1.atom,a','1.end_group'] ('seq',('atom','a'),('atom','b'),('atom','c'),('alt',(('atom','c'),),(('atom','a'),)))
+
+# --- groups and ranges
+["1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.start_range","1.atom,0","1.atom,-","1.atom,9","1.end_range","1.escape","1.start_range"] ('seq',('group',(('alt',(('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',)),(('range',0,9),('escape',('atom','[')))),)))
+["1.start_group","1.atom,a","1.alt","1.atom,b","1.end_group","1.atom,c"] ('seq',('group',(('group',(('alt',(('atom','a'),),(('atom','b'),)),('atom','c'))),)))

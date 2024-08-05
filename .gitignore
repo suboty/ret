@@ -1,5 +1,10 @@
+# service folder
 .idea
 .venv
+
+# test
 *.env
 .pytest_cache
-project_requirements.txt
+
+# research
+*.ipynb_checkpoints
