@@ -20,7 +20,6 @@ except KeyError:
 
 
 class TestLexicalAnalysis:
-
     la_python = LAPython()
 
     def test_python_cases(self):
@@ -28,13 +27,15 @@ class TestLexicalAnalysis:
         for test_type in la_test_data.keys():
             logger.info(f'Start test for lexical analysis for cases in <{test_type}> type')
             for case in la_test_data[test_type]:
-                if case[0] != '1':
+                _inputs = case[0].split(' ')
+                _input_syntax = _inputs[0]
+                _input_regex = ast.literal_eval(_inputs[1])
+                _output = case[1]
+                if _input_syntax != '1':
                     continue
-                _case = case
-                _case[2] = ast.literal_eval(_case[2])
                 try:
                     la_output = self.la_python(
-                        regex=_case[1]
+                        regex=_input_regex
                     )
 
                 except Exception as e:
@@ -44,11 +45,11 @@ class TestLexicalAnalysis:
                     )
                     raise e
 
-                assert la_output == _case[2], 'Error while testing, ' \
-                                              f'type: <{test_type}>, ' \
-                                              f'case: {_case[1]}, ' \
-                                              f'output: {_case[2]}, ' \
-                                              f'la output: {la_output}'
+                assert la_output == _output, 'Error while testing, ' \
+                                             f'type: <{test_type}>, ' \
+                                             f'case: {_input_regex}, ' \
+                                             f'output: {_output}, ' \
+                                             f'la output: {la_output}'
 
                 number_of_processing_cases += 1
 

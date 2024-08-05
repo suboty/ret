@@ -1,16 +1,29 @@
-# --- DIALECT_ID INPUT OUTPUT
+# --- TEST SET INFO:
+# --- #IN: DIALECT_ID INPUT_REGEX
+# --- #DELIMITER: \n
+# --- #OUT: OUTPUT_TOKENS
 
-# --- atoms
-1 a ['1.atom,a']
-1 abcde ['1.atom,a','1.atom,b','1.atom,c','1.atom,d','1.atom,e']
+# --- #TEST_GROUP: ATOMS
+1 a
+['1.atom,a']
 
-# --- one-quantifiers and meta symbols
-1 ab?c. ['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any']
+1 abcde
+['1.atom,a','1.atom,b','1.atom,c','1.atom,d','1.atom,e']
 
-# --- alternative groups
-1 ab?c.|d ['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any','1.alt','1.atom,d']
-1 abc(c|a)bce ['1.atom,a','1.atom,b','1.atom,c','1.start_group','1.atom,c','1.alt','1.atom,a','1.end_group','1.atom,b','1.atom,c','1.atom,e']
+# --- #TEST_GROUP: ONE-QUANTIFIERS AND META SYMBOLS
+1 ab?c.
+['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any']
 
-# --- groups and ranges
-1 ab?c.|[0-9]\[ ["1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.start_range","1.atom,0","1.atom,-","1.atom,9","1.end_range","1.escape","1.start_range"]
-1 (a|b)c ["1.start_group","1.atom,a","1.alt","1.atom,b","1.end_group","1.atom,c"]
+# --- #TEST_GROUP: ALTERNATIVE GROUPS
+1 ab?c.|d
+['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any','1.alt','1.atom,d']
+
+1 abc(c|a)bce
+['1.atom,a','1.atom,b','1.atom,c','1.start_group','1.atom,c','1.alt','1.atom,a','1.end_group','1.atom,b','1.atom,c','1.atom,e']
+
+# --- #TEST_GROUP: GROUPS AND RANGES
+1 ab?c.|[0-9]\[
+["1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.start_range","1.atom,0","1.atom,-","1.atom,9","1.end_range","1.escape","1.start_range"]
+
+1 (a|b)c
+["1.start_group","1.atom,a","1.alt","1.atom,b","1.end_group","1.atom,c"]
