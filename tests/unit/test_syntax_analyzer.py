@@ -8,7 +8,7 @@ class ErrorTestSyntaxAnalyzer(Exception):
 
 
 class TestSyntaxAnalyzer:
-    syntax_analyzer = SyntaxAnalyzer(syntax='python.re')
+    syntax_analyzer = SyntaxAnalyzer()
 
     def test_syntax_analysis(self):
         for data_ex in test_data:

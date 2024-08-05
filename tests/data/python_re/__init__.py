@@ -8,9 +8,9 @@ test_data_v1 = {
             # input
             'abc.',
             # tokens
-            '<atom:abc><any>',
+            '<_ATOM_:a><_ATOM_:b><_ATOM_:c><_ANY_CHARACTER_>',
             # optim_tokens
-            '<atom:abc><any>',
+            '<_ATOM_:a><_ATOM_:b><_ATOM_:c><_ANY_CHARACTER_>',
             # ast
             '',
             # optim_ast

@@ -26,4 +26,7 @@ regex = seq(group(many(expr)),
 state = parse('color: #[0-9A-Fa-f]{6}', regex)
 tree = state.stack[-1]
 
+
+print(tree)
+print()
 pprint(tree)

@@ -1,6 +1,3 @@
-from pprint import pprint
-
-
 class Stack:
     def __init__(self):
         self.stack = []
@@ -46,23 +43,15 @@ class Re2Parsing:
 
         for symbol in expression:
             self.stack.push(symbol)
-            print(symbol, tokens, _state, len(self.stack.get()))
+            # print(symbol, tokens, _state, len(self.stack.get()))
 
             if symbol.isspace():
-                continue
-
-            if symbol == '%':
-                tokens.append(tuple(['whitespace']))
                 continue
 
             if _current_group is None and _current_quantifier is None and _current_left_part is None:
                 _state = 'atom'
                 if symbol.isalpha() or symbol.isdigit():
-                    # TODO: FIX IT
-                    if symbol == '%':
-                        tokens.append(tuple(['whitespace']))
-                    else:
-                        tokens.append(('atom', symbol))
+                    tokens.append(('atom', symbol))
                 elif symbol == '.':
                     tokens.append(tuple(['any']))
                 elif symbol == '(':
@@ -89,10 +78,7 @@ class Re2Parsing:
             elif _current_quantifier is not None:
                 _state = 'quantifier'
                 if symbol.isalpha() or symbol.isdigit():
-                    if symbol == '%':
-                        _cache.append(tuple(['whitespace']))
-                    else:
-                        _cache.append(('atom', symbol))
+                    _cache.append(('atom', symbol))
                 elif symbol == '.':
                     _cache.append(tuple(['any']))
                 elif symbol == '}':
@@ -104,10 +90,7 @@ class Re2Parsing:
             elif _current_group is not None:
                 _state = 'group'
                 if symbol.isalpha() or symbol.isdigit():
-                    if symbol == '%':
-                        _cache.append(tuple(['whitespace']))
-                    else:
-                        _cache.append(('atom', symbol))
+                    _cache.append(('atom', symbol))
                 elif symbol == '.':
                     _cache.append(tuple(['any']))
                 elif symbol == ')' and _current_left_part is None:
@@ -129,10 +112,7 @@ class Re2Parsing:
             elif _current_left_part is not None and _current_group is None:
                 _state = 'alt'
                 if symbol.isalpha() or symbol.isdigit():
-                    if symbol == '%':
-                        _current_right_part = tuple(['whitespace'])
-                    else:
-                        _current_right_part = ('atom', symbol)
+                    _current_right_part = ('atom', symbol)
                 elif symbol == '.':
                     _current_right_part = tuple(['any'])
                 tokens[-1] = ('alt', _current_left_part, _current_right_part)
@@ -140,11 +120,18 @@ class Re2Parsing:
         return 'expr', tuple(tokens)
 
 
-l = Re2Parsing()
+if __name__ == '__main__':
+    la = Re2Parsing()
 
-# examples
-res = l('(i|I)nternational.{0, 1}(c|C)onference.{0, 1}on.{0, 1}(i|I)nformation.{0, 1}(t|T)echnologies{0, 8}(bulgaria|Bulgaria).{0,5}(2024|11-12.september.2024)')
-# res = l('кор(о|а)ва')
+    regexes = [
+        'infoTech{0, 5}(bulgaria|2024)',
+        'infoTech Conference{0,3}(bulgaria|2024)',
+        'infoTech bulgaria)',
+        'InfoTech 2024'
+    ]
 
-# res = l(input('Enter regular expression (python syntax): '))
-pprint(res)
+    with open('trees', 'w') as results_file:
+
+        for regex in regexes:
+            _ast = la(regex)
+            results_file.writelines(str(_ast) + '\n')
