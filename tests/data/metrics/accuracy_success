@@ -1,0 +1,38 @@
+# --- TEST SET INFO:
+# --- #IN: DIALECT_ID INPUT_REGEX INPUT TEXT
+# --- #DELIMITER: \n
+# --- #OUT: OUTPUT_METRIC
+
+# --- #TEST_GROUP: ATOMS
+1 a a
+1
+
+1 abcde abcdd
+0
+
+# --- #TEST_GROUP: ONE-QUANTIFIERS AND META SYMBOLS
+1 ab?c. acc
+1
+
+1 ab*c. abc3
+1
+
+1 ab+c. abbb
+0
+
+# --- #TEST_GROUP: ALTERNATIVE GROUPS
+1 ab?c.|d d
+1
+
+1 abc(c|a)b abcab
+1
+
+# --- #TEST_GROUP: GROUPS AND RANGES
+1 ab?c.|[0-9]\[ abc00020320[
+1
+
+1 (a|b)c ab
+0
+
+1 (a|b{1,2})c bc
+1
