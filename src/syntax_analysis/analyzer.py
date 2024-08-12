@@ -1,7 +1,7 @@
 from typing import List, Union, Tuple
 
 from src.logger import logger
-from src.syntax_analysis.utils import Stack, Tree
+from src.utils import Stack, Tree
 from src.lexical_analysis import Dialects
 
 MAX_LEN = 'inf'
