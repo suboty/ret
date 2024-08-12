@@ -29,8 +29,8 @@ class TestLexicalAnalysis:
             for case in la_test_data[test_type]:
                 _inputs = case[0].split(' ')
                 _input_syntax = _inputs[0]
-                _input_regex = ast.literal_eval(_inputs[1])
-                _output = case[1]
+                _input_regex = str(_inputs[1])
+                _output = ast.literal_eval(case[1])
                 if _input_syntax != '1':
                     continue
                 try:

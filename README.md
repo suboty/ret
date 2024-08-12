@@ -28,19 +28,21 @@ syntax = "python"
 #### output
 ```python
 tokens = [
+    "1.start_group,0",
     "1.atom,a", 
     "1.atom,b", 
     "1.0_or_1", 
     "1.atom,c",
     "1.any",
     "1.alt",
-    "1.start_range",
+    "1.start_range,0",
     "1.atom,0",
     "1.atom,-",
     "1.atom,9",
     "1.end_range",
     "1.escape",
-    "1.start_range",
+    "1.start_range,0",
+    "1.end_group,0"
 ]
 ```
 
@@ -52,19 +54,21 @@ will be soon...
 #### input
 ```python
 tokens = [
-    "<1.atom,a>", 
-    "<1.atom,b>", 
-    "<1.0_or_1>", 
-    "<1.atom,c>",
-    "<1.any>"
-    "<1.alt>",
-    "<1.start_range>",
-    "<1.atom,0>",
-    "<1.atom,->",
-    "<1.atom,9>",
-    "<1.end_range>",
-    "<1.escape>",
-    "<1.start_range>",
+    "1.start_group,0",
+    "1.atom,a", 
+    "1.atom,b", 
+    "1.0_or_1", 
+    "1.atom,c",
+    "1.any",
+    "1.alt",
+    "1.start_range,0",
+    "1.atom,0",
+    "1.atom,-",
+    "1.atom,9",
+    "1.end_range",
+    "1.escape",
+    "1.start_range,0",
+    "1.end_group,0"
 ]
 ```
 #### output

@@ -20,7 +20,10 @@ class Stack:
         return self.stack.pop()
 
     def get(self, i):
-        return self.stack[i]
+        try:
+            return self.stack[i]
+        except IndexError:
+            return 0
 
 
 class Tree:

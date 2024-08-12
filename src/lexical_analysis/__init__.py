@@ -2,11 +2,14 @@ from abc import abstractmethod
 from enum import Enum
 from typing import List
 
+from src.utils import Stack
+
 
 class LexicalAnalyzerBase:
     @abstractmethod
     def __init__(self):
         self.tokens = []
+        self.brackets_stack = Stack()
 
     @abstractmethod
     def __call__(
