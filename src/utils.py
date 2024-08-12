@@ -1,22 +1,43 @@
 import re
 import ast
+
 import numpy
 
-from src.syntax_analysis.analyzer import SyntaxAnalyzer
-from src.lexical_analysis.python import LexicalAnalyzer as LexicalAnalyzerPython
-from src.generating.python import Generator as GeneratorPython
 
-__la_python = LexicalAnalyzerPython()
-__sa = SyntaxAnalyzer()
-__g_python = GeneratorPython()
+class Stack:
+    def __init__(self):
+        self.stack = []
+
+    def __len__(self):
+        return len(self.stack)
+
+    def push(self, item):
+        self.stack.append(item)
+
+    def pop(self):
+        if len(self.stack) == 0:
+            return None
+        return self.stack.pop()
+
+    def get(self, i):
+        return self.stack[i]
 
 
-def is_completely_equal_by_ast(a, b):
-    tokens_a = __la_python(a)
-    tokens_b = __la_python(b)
-    ast_a = __sa(tokens_a)
-    ast_b = __sa(tokens_b)
-    return ast_a == ast_b
+class Tree:
+    def __init__(self, value, *args):
+        self.value = value
+        self.children = args
+        self.clean_reg = re.compile(r'\-+')
+
+    def __repr__(self, depth=1):
+        return_string = [str(self.value)]
+        for child in self.children:
+            return_string.extend(["\n", "-" * (depth + 1), child.__repr__(depth + 1)])
+        return "".join(return_string)
+
+    def get_ind_words(self):
+        string = self.__repr__().replace('\n', '')
+        return ast.literal_eval('["' + self.clean_reg.sub('", "', string) + '"]')
 
 
 def get_levenshtein_distance(regex_a, regex_b):
@@ -40,12 +61,3 @@ def get_levenshtein_distance(regex_a, regex_b):
                 else:
                     distances[t1][t2] = c + 1
     return distances[len(regex_a)][len(regex_b)]
-
-
-def get_ast(regex):
-    tokens = __la_python(regex)
-    return __sa(tokens)
-
-
-def get_regex(ast):
-    return __g_python(ast)
