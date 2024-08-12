@@ -5,32 +5,44 @@
 
 # --- #TEST_GROUP: ATOMS
 # --- 1 reg: a
-['1.atom,a']
-('seq',('atom','a'))
+["start_group,0","atom,a","end_group,0"]
+('seq',(('atom','a'),))
 
 # --- 2 reg: abcde
-['1.atom,a','1.atom,b','1.atom,c','1.atom,d','1.atom,e']
-('seq',('atom','a'),('atom','b'),('atom','c'),('atom','d'),('atom','e'))
+["start_group,0","atom,a","atom,b","atom,c","atom,d","atom,e","end_group,0"]
+('seq',(('atom','a'),('atom','b'),('atom','c'),('atom','d'),('atom','e')))
 
 # --- #TEST_GROUP: ONE-QUANTIFIERS AND META SYMBOLS
 # --- 3 reg: ab?c.
-['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any']
-('seq',('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',))
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","end_group,0"]
+('seq',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',)))
+
+# --- 4 reg: ab*c.
+["start_group,0","atom,a","atom,b","0_or_more","atom,c","any","end_group,0"]
+('seq',(('atom','a'),('repeat_0_inf',('atom','b')),('atom','c'),('any',)))
+
+# --- 5 reg: ab+c.
+["start_group,0","atom,a","atom,b","1_or_more","atom,c","any","end_group,0"]
+('seq',(('atom','a'),('repeat_1_inf',('atom','b')),('atom','c'),('any',)))
 
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
-# --- 4 reg: ab?c.|d
-['1.atom,a','1.atom,b','1.0_or_1','1.atom,c','1.any','1.alt','1.atom,d']
-('seq',('alt',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',)),(('atom','d'),)))
+# --- 6 reg: ab?c.|d
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","alt,0","atom,d","end_group,0"]
+("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("atom","d"),))))
 
-# --- 5 reg: abc(c|a)b
-['1.atom,a','1.atom,b','1.atom,c','1.start_group','1.atom,c','1.alt','1.atom,a','1.end_group', '1.atom,b']
-('seq',('atom','a'),('atom','b'),('atom','c'),('group',(('alt',((('atom','c'),),(('atom','a'),))),),('atom','b')))
+# --- 7 reg: abc(c|a)b
+["start_group,0","atom,a","atom,b","atom,c","start_group,1","atom,c","alt,1","atom,a","end_group,1","atom,b","end_group,0"]
+("seq",(("atom","a"),("atom","b"),("atom","c"),("group",("alt",((("atom","c"),),(("atom","a"),)))),("atom","b")))
 
-# --- #TEST_GROUP: GROUPS AND RANGES
-# --- 6 reg: ab?c.|[0-9]\[
-["1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.start_range","1.atom,0","1.atom,-","1.atom,9","1.end_range","1.escape","1.start_range"]
-('seq',('group',(('alt',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',)),(('range_0_9',('escape',('atom','['))),)),)))
+# --- #TEST_GROUP: GROUPS AND QUANTIFIERS AND RANGES
+# --- 8 reg: ab?c.|[0-9]\[
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","alt,0","start_range,0","atom,0","atom,-","atom,9","end_range,0","escape,[","end_group,0"]
+("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("range_0_9",),("escape","[")))))
 
-# --- 7 reg: (a|b)c
-["1.start_group","1.atom,a","1.alt","1.atom,b","1.end_group","1.atom,c"]
-('seq',('group',(('alt',('atom',a),('atom',b)))),('atom',c))
+# --- 9 reg: (a|b)c
+["start_group,0","start_group,1","atom,a","alt,1","atom,b","end_group,1","atom,c","end_group,0"]
+("seq",(("group",("alt",((("atom","a"),),(("atom","b"),)))),("atom","c")))
+
+# --- 10 reg: (a|b{1,2})c
+["start_group,0","start_group,1","atom,a","alt,1","atom,b","start_quant,0","atom,1","atom,,","atom,2","end_quant,0","end_group,1","atom,c","end_group,0"]
+("seq",(("group",("alt",((("atom","a"),),(("repeat_1_2",("atom","b")),)))),("atom","c")))

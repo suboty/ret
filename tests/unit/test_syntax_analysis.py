@@ -2,7 +2,7 @@ import ast
 
 from tests import test_data
 from src.logger import logger
-from src.syntax_analysis.analyzer2 import SyntaxAnalyzer
+from src.syntax_analysis.analyzer import SyntaxAnalyzer
 
 
 class SyntaxAnalysisTestingError(Exception):
@@ -31,7 +31,7 @@ class TestSyntaxAnalysis:
                     sa_output = sa(_case[0])
                 except Exception as e:
                     logger.error(
-                        message=f'Error while python syntax analyzer working',
+                        message=f'Error while python syntax analyzer working, case {i+1}',
                         exc=SyntaxAnalysisTestingError,
                     )
                     raise e
