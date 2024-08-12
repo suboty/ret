@@ -14,6 +14,12 @@
 1 ab?c.
 ["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.end_group,0"]
 
+1 ab*c.
+["1.start_group,0","1.atom,a","1.atom,b","1.0_or_more","1.atom,c","1.any","1.end_group,0"]
+
+1 ab+c.
+["1.start_group,0","1.atom,a","1.atom,b","1.1_or_more","1.atom,c","1.any","1.end_group,0"]
+
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
 1 ab?c.|d
 ["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt,0","1.atom,d","1.end_group,0"]
