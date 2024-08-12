@@ -2,7 +2,7 @@ import ast
 
 from tests import test_data
 from src.logger import logger
-from src.syntax_analysis.analyzer import SyntaxAnalyzer
+from src.syntax_analysis.analyzer2 import SyntaxAnalyzer
 
 
 class SyntaxAnalysisTestingError(Exception):

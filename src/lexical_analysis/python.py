@@ -98,14 +98,14 @@ class LexicalAnalyzer(LexicalAnalyzerBase):
         _find = False
 
         if self._escape:
-            self.tokens.append(f'{self.__dialect_id}.escape,{symbol}')
+            self.tokens.append(f'escape,{symbol}')
             _find = True
             self._escape = False
 
         if not _find:
             for key in self.f2t.keys():
                 if symbol == self.s2t.get(key):
-                    self.tokens.append(f'{self.__dialect_id}.{key}')
+                    self.tokens.append(f'{key}')
                     _find = True
 
         if not _find:
@@ -116,30 +116,30 @@ class LexicalAnalyzer(LexicalAnalyzerBase):
                         self._escape = True
                         _find = True
                     elif key == 'alt':
-                        self.tokens.append(f'{self.__dialect_id}.{key},{self.bracket_ids["("]}')
+                        self.tokens.append(f'{key},{self.bracket_ids["("]}')
                         _find = True
                     elif symbol in self.brackets:
                         if not self.bracket_pairs.get(symbol):
                             self.brackets_stack.push(symbol)
                             self.bracket_ids[symbol] += 1
-                            self.tokens.append(f'{self.__dialect_id}.{key},{self.bracket_ids[symbol]}')
+                            self.tokens.append(f'{key},{self.bracket_ids[symbol]}')
                             _find = True
                         else:
                             if self.bracket_pairs.get(symbol) == self.brackets_stack.get(-1):
                                 __current_bracket = self.bracket_pairs[symbol]
                                 self.brackets_stack.pop()
-                                self.tokens.append(f'{self.__dialect_id}.{key},{self.bracket_ids[__current_bracket]}')
+                                self.tokens.append(f'{key},{self.bracket_ids[__current_bracket]}')
                                 _find = True
                                 self.bracket_ids[__current_bracket] -= 1
                             elif self.brackets_stack.get(-1) == 0:
                                 __current_bracket = self.bracket_pairs[symbol]
-                                self.tokens.append(f'{self.__dialect_id}.{key},{self.bracket_ids[__current_bracket]}')
+                                self.tokens.append(f'{key},{self.bracket_ids[__current_bracket]}')
                                 _find = True
                                 self.bracket_ids[__current_bracket] -= 1
                             else:
                                 raise LexicalAnalyzerError('Parenthesis mismatch')
                     else:
-                        self.tokens.append(f'{self.__dialect_id}.{key}')
+                        self.tokens.append(f'{key}')
                         _find = True
         if not _find:
-            self.tokens.append(f'{self.__dialect_id}.atom,{symbol}')
+            self.tokens.append(f'atom,{symbol}')

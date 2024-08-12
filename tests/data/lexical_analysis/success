@@ -5,31 +5,34 @@
 
 # --- #TEST_GROUP: ATOMS
 1 a
-["1.start_group,0","1.atom,a","1.end_group,0"]
+["start_group,0","atom,a","end_group,0"]
 
 1 abcde
-["1.start_group,0","1.atom,a","1.atom,b","1.atom,c","1.atom,d","1.atom,e","1.end_group,0"]
+["start_group,0","atom,a","atom,b","atom,c","atom,d","atom,e","end_group,0"]
 
 # --- #TEST_GROUP: ONE-QUANTIFIERS AND META SYMBOLS
 1 ab?c.
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.end_group,0"]
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","end_group,0"]
 
 1 ab*c.
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_more","1.atom,c","1.any","1.end_group,0"]
+["start_group,0","atom,a","atom,b","0_or_more","atom,c","any","end_group,0"]
 
 1 ab+c.
-["1.start_group,0","1.atom,a","1.atom,b","1.1_or_more","1.atom,c","1.any","1.end_group,0"]
+["start_group,0","atom,a","atom,b","1_or_more","atom,c","any","end_group,0"]
 
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
 1 ab?c.|d
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt,0","1.atom,d","1.end_group,0"]
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","alt,0","atom,d","end_group,0"]
 
-1 abc(c|a)bce
-["1.start_group,0","1.atom,a","1.atom,b","1.atom,c","1.start_group,1","1.atom,c","1.alt,1","1.atom,a","1.end_group,1","1.atom,b","1.atom,c","1.atom,e","1.end_group,0"]
+1 abc(c|a)b
+["start_group,0","atom,a","atom,b","atom,c","start_group,1","atom,c","alt,1","atom,a","end_group,1","atom,b","end_group,0"]
 
 # --- #TEST_GROUP: GROUPS AND RANGES
 1 ab?c.|[0-9]\[
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt,0","1.start_range,0","1.atom,0","1.atom,-","1.atom,9","1.end_range,0","1.escape,[","1.end_group,0"]
+["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","alt,0","start_range,0","atom,0","atom,-","atom,9","end_range,0","escape,[","end_group,0"]
 
 1 (a|b)c
-["1.start_group,0","1.start_group,1","1.atom,a","1.alt,1","1.atom,b","1.end_group,1","1.atom,c","1.end_group,0"]
+["start_group,0","start_group,1","atom,a","alt,1","atom,b","end_group,1","atom,c","end_group,0"]
+
+1 (a|b{1,2})c
+["start_group,0","start_group,1","atom,a","alt,1","atom,b","start_quant,0","atom,1","atom,,","atom,2","end_quant,0","end_group,1","atom,c","end_group,0"]
