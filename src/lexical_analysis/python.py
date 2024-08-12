@@ -54,6 +54,11 @@ class LexicalAnalyzer(LexicalAnalyzerBase):
         '{': -1
     }
 
+    # TODO: add groups meta like [^], (?!), ...
+    groups_meta = {
+        '(': ['|']
+    }
+
     def make_unicode_characters_storage(self):
         with open('unicode-chars', 'w') as file:
             for i in range(self.MIN_CHAR, self.MAX_CHAR):
@@ -109,6 +114,9 @@ class LexicalAnalyzer(LexicalAnalyzerBase):
 
                     if key == 'escape':
                         self._escape = True
+                        _find = True
+                    elif key == 'alt':
+                        self.tokens.append(f'{self.__dialect_id}.{key},{self.bracket_ids["("]}')
                         _find = True
                     elif symbol in self.brackets:
                         if not self.bracket_pairs.get(symbol):

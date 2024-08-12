@@ -16,14 +16,14 @@
 
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
 1 ab?c.|d
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.atom,d","1.end_group,0"]
+["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt,0","1.atom,d","1.end_group,0"]
 
 1 abc(c|a)bce
-["1.start_group,0","1.atom,a","1.atom,b","1.atom,c","1.start_group,1","1.atom,c","1.alt","1.atom,a","1.end_group,1","1.atom,b","1.atom,c","1.atom,e","1.end_group,0"]
+["1.start_group,0","1.atom,a","1.atom,b","1.atom,c","1.start_group,1","1.atom,c","1.alt,1","1.atom,a","1.end_group,1","1.atom,b","1.atom,c","1.atom,e","1.end_group,0"]
 
 # --- #TEST_GROUP: GROUPS AND RANGES
 1 ab?c.|[0-9]\[
-["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt","1.start_range,0","1.atom,0","1.atom,-","1.atom,9","1.end_range,0","1.escape,[","1.end_group,0"]
+["1.start_group,0","1.atom,a","1.atom,b","1.0_or_1","1.atom,c","1.any","1.alt,0","1.start_range,0","1.atom,0","1.atom,-","1.atom,9","1.end_range,0","1.escape,[","1.end_group,0"]
 
 1 (a|b)c
-["1.start_group,0","1.start_group,1","1.atom,a","1.alt","1.atom,b","1.end_group,1","1.atom,c","1.end_group,0"]
+["1.start_group,0","1.start_group,1","1.atom,a","1.alt,1","1.atom,b","1.end_group,1","1.atom,c","1.end_group,0"]
