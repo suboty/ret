@@ -1,0 +1,5 @@
+# a(bcd?)
+('seq',('atom','a'),('group',('atom','b'),('atom','c'),('repeat',('atom','d'),0,1)))
+
+# a(aa)
+('seq',('atom','a'),('group',('atom','a'),('atom','a')))

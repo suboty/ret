@@ -1,0 +1,69 @@
+{
+    'Groups': {
+        'simple': {
+            'start': '(',
+            'end': ')',
+        },
+        'quantifier': {
+            'start': '{',
+            'end': '}',
+            'delimiter': ',',
+        },
+        'range': {
+            'start': '[',
+            'end': ']',
+            'delimiter': '-',
+            'not': '^',
+        },
+        'alternative': {
+            'start': '(',
+            'end': ')',
+            'delimiter': '|'
+        },
+    },
+
+    'Atoms': {
+        'line_start': '^',
+        'string_start': '\A',
+        'line_end': '$',
+        'string_end': '\Z',
+        'word_boundary': '\b',
+        'word_start': '\<',
+        'word_end': '\>',
+        'control_character': '\c',
+        'white_space': '\s',
+        'not_white_space': '\S',
+        'digit': '\d',
+        'not_digit': '\D',
+        'word': '\w',
+        'not_word': '\W',
+        'new_line': '\n',
+        'carriage_return': '\r',
+        'tab': '\t',
+        'vertical_tab': '\v',
+        'form_feed': '\f',
+        'octal_character': '\xxx',
+        'hex_character': '\xhh',
+        'begin_literal_sequence': '\Q',
+        'end_literal_sequence': '\E',
+        'escape_character': '\',
+        'any_character': '.',
+    },
+
+    'Ahead': {
+        '0_or_more': '*',
+        '1_or_more': '+',
+        '0_or_1': '?'
+    },
+
+    'Assertions': {
+        'lookahead': '?=',
+        'negative_lookahead': '?!',
+        'lookbehind': '?<=',
+        'negative_lookbehind': ['?!=', '?<!'],
+        'once_only_subexpression': '?>',
+        'condition_if_then': '?()',
+        'condition_if_then_else': '?()|',
+        'comment': '?#'
+    },
+}

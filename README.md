@@ -1,24 +1,102 @@
-# relt v0.1.0
+# Regular Expression Translator
 
-<b>relt</b> is a <b>re</b>gular <b>l</b>anguage <b>t</b>ranslator is created for optimization and translating different regular languages
+# TODO: FIX EXAMPLES
 
-## Architecture
+## Dialects
 
-<img src="assets/architecture_v0.png" alt="Architecture for v0.x">
+ID-s:
+1. python
+2. posix-bre
+3. posix-ere
+4. perl
+5. pcre
+6. ecmascript
 
-## Project Structure
+<img alt="Regular expression dialects" src="assets/regex_dialects_classification.png">
+
+## Workflow
+
+<img alt="Regular expressions translator workflow" src="assets/regex_translator_architecture.png">
+
+### Lexical analysis
+
+#### input
+```python
+regex = "ab?c.|[0-9]\["
+syntax = "python"
 ```
-.
-├── assets
-├── lexical_analyzer.py
-├── main.py
-├── relt
-│   ├── ast_optimizator
-│   ├── expression_generator
-│   ├── lexical_analyzer
-│   ├── main.py
-│   ├── syntax_analyzer
-│   └── token_optimizator
-└── syntaxes
+#### output
+```python
+tokens = [
+    "1.atom,a", 
+    "1.atom,b", 
+    "1.0_or_1", 
+    "1.atom,c",
+    "1.any",
+    "1.alt",
+    "1.start_range",
+    "1.atom,0",
+    "1.atom,-",
+    "1.atom,9",
+    "1.end_range",
+    "1.escape",
+    "1.start_range",
+]
+```
 
+### Tokens Optimization
+will be soon...
+
+### Syntax analysis
+
+#### input
+```python
+tokens = [
+    "<1.atom,a>", 
+    "<1.atom,b>", 
+    "<1.0_or_1>", 
+    "<1.atom,c>",
+    "<1.any>"
+    "<1.alt>",
+    "<1.start_range>",
+    "<1.atom,0>",
+    "<1.atom,->",
+    "<1.atom,9>",
+    "<1.end_range>",
+    "<1.escape>",
+    "<1.start_range>",
+]
+```
+#### output
+```python
+ast = (
+    "seq", 
+    ("atom", "a"),
+    ("repeat", ("atom", "b"), 0, 1),
+    ("atom", "c"),
+    ("alt", ("any", ), ("range", 0, 9)),
+    ("escape", "[")
+)
+```
+
+### AST Optimization
+will be soon...
+
+### Expression Generator
+
+#### input
+```python
+ast = (
+    "seq", 
+    ("atom", "a"),
+    ("repeat", ("atom", "b"), 0, 1),
+    ("atom", "c"),
+    ("alt", ("any", ), ("range", 0, 9)),
+    ("escape", "[")
+)
+syntax = 'python'
+```
+#### output
+```python
+regex = "ab{,1}c.|[0-9]\["
 ```
