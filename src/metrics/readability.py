@@ -7,12 +7,3 @@ READABILITY_LEVELS = {
     'range': 3,
     'repeat': 3,
 }
-
-
-def get_readability(ast):
-    score = 0
-    for subtree in ast:
-        if isinstance(subtree, str):
-            continue
-        score += READABILITY_LEVELS.get(subtree[0])
-    return score/len(ast)
