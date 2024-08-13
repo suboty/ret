@@ -2,6 +2,7 @@ import pprint
 import argparse
 
 from src.translator import Translator
+from src.representation.graph import RepresentationGenerator
 from src.logger import logger
 
 if __name__ == '__main__':
@@ -21,6 +22,17 @@ if __name__ == '__main__':
 
     output_regex = translator.translate(string=input_regex, input_syntax=input_syntax, output_syntax=output_syntax)
 
-    logger.info(f'Get regex in <{input_syntax}> input syntax: {input_regex}')
-    logger.info(f'Get Regex in <{output_syntax}> output syntax: {output_regex}')
-    logger.info(f'Get AST:\n{pprint.pformat(translator.ast)}')
+    logger.info(f'Translate steps:')
+    logger.info(f'--- Get regex in <{input_syntax}> input syntax: {input_regex}')
+    logger.info(f'--- Get Regex in <{output_syntax}> output syntax: {output_regex}')
+    logger.info(f'--- Get AST:\n{pprint.pformat(translator.ast)}')
+
+    nodes, edges = RepresentationGenerator.get_nodes_and_edges(
+        nodes=[],
+        edges=[],
+        ast=translator.ast,
+    )
+
+    logger.info(f'Representations steps:')
+    logger.info(f'--- Nodes: {nodes}')
+    logger.info(f'--- Edges: {edges}')
