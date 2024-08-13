@@ -1,4 +1,5 @@
 from typing import Tuple
+from src.logger import logger
 
 
 class Generator:
@@ -15,29 +16,42 @@ class Generator:
 
     def repeat(self, subtree):
         group = self.eat(subtree[1])
-        return group + f'{"{"}{subtree[2]}{","}{subtree[3]}{"}"}'
+        params = subtree[0].split('_')
+        if params[2] == 'inf':
+            params[2] = ''
+        return group + f'{"{"}{params[1]}{","}{params[2]}{"}"}'
 
     def alt(self, subtree):
-        first_group = ''
-        second_group = ''
-        for subgroup in list(subtree[1]):
-            first_group += self.eat(subgroup)
-        for subgroup in list(subtree[2]):
-            second_group += self.eat(subgroup)
+        groups = [x for x in subtree[1]]
+        regexes = []
 
-        return f'({first_group}|{second_group})'
+        for group in groups:
+            _regex = ''
+            for subgroup in group:
+                _regex += self.eat(subgroup)
+            regexes.append(_regex)
+
+        return f'({"|".join(regexes)})'
 
     def escape(self, subtree):
-        return f'\\{self.eat(subtree[1])}'
+        return f'\\{subtree[1]}'
 
     @staticmethod
     def range(subtree):
+        params = subtree[0].split('_')
         # TODO: add few ranges and not ranges cases
-        return f'[{subtree[1]}-{subtree[2]}]'
+        return f'[{params[1]}-{params[2]}]'
 
     def group(self, subtree):
         output = ''
+        _alt = False
         for subgroup in subtree[1]:
+            if subgroup == 'alt':
+                _alt = True
+                continue
+            if _alt:
+                subgroup = ('alt', subgroup)
+                _alt = False
             output += self.eat(subgroup)
         return output
 
@@ -47,13 +61,13 @@ class Generator:
             return self.atom(subtree)
         elif subtree_type == 'any':
             return self.any()
-        elif subtree_type == 'repeat':
+        elif 'repeat' in subtree_type:
             return self.repeat(subtree)
         elif subtree_type == 'alt':
             return self.alt(subtree)
         elif subtree_type == 'escape':
             return self.escape(subtree)
-        elif subtree_type == 'range':
+        elif 'range' in subtree_type:
             return self.range(subtree)
         elif subtree_type == 'group':
             return self.group(subtree)
@@ -61,8 +75,14 @@ class Generator:
 
     def __call__(self, ast: Tuple, *args, **kwargs):
         self.regex = ''
-        for subtree in ast:
-            if subtree == 'seq':
+        # skip "seq" node
+        _alt = False
+        for subtree in ast[1]:
+            if subtree == 'alt':
+                _alt = True
                 continue
+            if _alt:
+                subtree = ('alt', subtree)
+                _alt = False
             self.regex += self.eat(subtree)
         return self.regex

@@ -26,7 +26,7 @@ class TestGenerating:
         number_of_processing_cases = 0
         for test_type in generator_test_data.keys():
             logger.info(f'Start test for generating for cases in <{test_type}> type')
-            for case in generator_test_data[test_type]:
+            for i, case in enumerate(generator_test_data[test_type]):
                 _inputs = case[0].split(' ')
                 _input_syntax = _inputs[0]
                 _input_ast = ast.literal_eval(_inputs[1])
@@ -46,7 +46,7 @@ class TestGenerating:
                     )
                     raise e
 
-                assert generator_output == _output, 'Error while testing, ' \
+                assert generator_output == _output, f'Error while testing <{i+1}>, ' \
                                                     f'type: <{test_type}>, ' \
                                                     f'case: {_input_ast}, ' \
                                                     f'output: {_output}, ' \
