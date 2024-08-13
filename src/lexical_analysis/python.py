@@ -2,7 +2,6 @@ import os
 import unicodedata
 from typing import List
 
-from src.logger import logger
 from src.lexical_analysis import LexicalAnalyzerBase
 from src.lexical_analysis import Dialects
 

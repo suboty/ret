@@ -1,5 +1,4 @@
 from typing import Tuple
-from src.logger import logger
 
 
 class Generator:
@@ -33,7 +32,8 @@ class Generator:
 
         return f'({"|".join(regexes)})'
 
-    def escape(self, subtree):
+    @staticmethod
+    def escape(subtree):
         return f'\\{subtree[1]}'
 
     @staticmethod

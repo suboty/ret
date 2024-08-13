@@ -1,7 +1,6 @@
 import re
-from typing import List, Union, Optional
+from typing import List, Optional
 
-from src.logger import logger
 
 MAX_LEN = 'inf'
 
