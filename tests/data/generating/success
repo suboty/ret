@@ -4,26 +4,45 @@
 # --- #OUT: OUTPUT_REGEX
 
 # --- #TEST_GROUP: ATOMS
-1 ('seq',('group',(('atom','a'),)))
+# --- 1 reg: a
+1 ('seq',(('atom','a'),))
 a
 
-1 ('seq',('group',(('atom','a'),('atom','b'),('atom','c'),('atom','d'),('atom','e'))))
+# --- 2 reg: abcde
+1 ('seq',(('atom','a'),('atom','b'),('atom','c'),('atom','d'),('atom','e')))
 abcde
 
 # --- #TEST_GROUP: ONE-QUANTIFIERS AND META SYMBOLS
-1 ('seq',('group',(('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',))))
+# --- 3 reg: ab?c.
+1 ('seq',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',)))
 ab{0,1}c.
 
+# --- 4 reg: ab*c.
+1 ('seq',(('atom','a'),('repeat_0_inf',('atom','b')),('atom','c'),('any',)))
+ab{0,}c.
+
+# --- 5 reg: ab+c.
+1 ('seq',(('atom','a'),('repeat_1_inf',('atom','b')),('atom','c'),('any',)))
+ab{1,}c.
+
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
-1 ('seq',('group',(('alt',(('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',)),(('atom','d'),)),)))
-(ab{0,1}c.|d)
+# --- 6 reg: ab?c.|d
+1 ("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("atom","d"),))))
+(ab{0,}c.|d)
 
-1 ('seq',('group',(('atom','a'),('atom','b'),('atom','c'),('group',(('alt',(('atom','c'),),(('atom','a'),)),)))))
-abc(c|a)
+# --- 7 reg: abc(c|a)b
+1 ("seq",(("atom","a"),("atom","b"),("atom","c"),("group",("alt",((("atom","c"),),(("atom","a"),)))),("atom","b")))
+abc(c|a)b
 
-# --- #TEST_GROUP: GROUPS AND RANGES
-1 ('seq',('group',(('alt',(('atom','a'),('repeat',('atom','b'),0,1),('atom','c'),('any',)),(('range',0,9),('escape',('atom','[')))),)))
-(ab{0,1}c.|[0-9]\[)
+# --- #TEST_GROUP: GROUPS AND QUANTIFIERS AND RANGES
+# --- 8 reg: ab?c.|[0-9]\[
+1 ("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("range_0_9",),("escape","[")))))
+ab?c.|[0-9]\[
 
-1 ('seq',('group',(('group',(('alt',(('atom','a'),),(('atom','b'),)),('atom','c'))),)))
+# --- 9 reg: (a|b)c
+1 ("seq",(("group",("alt",((("atom","a"),),(("atom","b"),)))),("atom","c")))
 (a|b)c
+
+# --- 10 reg: (a|b{1,2})c
+1 ("seq",(("group",("alt",((("atom","a"),),(("repeat_1_2",("atom","b")),)))),("atom","c")))
+(a|b{1,2})c

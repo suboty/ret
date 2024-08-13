@@ -27,7 +27,7 @@
 1 abc(c|a)b
 ["start_group,0","atom,a","atom,b","atom,c","start_group,1","atom,c","alt,1","atom,a","end_group,1","atom,b","end_group,0"]
 
-# --- #TEST_GROUP: GROUPS AND RANGES
+# --- #TEST_GROUP: GROUPS AND QUANTIFIERS AND RANGES
 1 ab?c.|[0-9]\[
 ["start_group,0","atom,a","atom,b","0_or_1","atom,c","any","alt,0","start_range,0","atom,0","atom,-","atom,9","end_range,0","escape,[","end_group,0"]
 
