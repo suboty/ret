@@ -2,6 +2,9 @@
 .idea
 .venv
 
+# service files
+unicode-chars
+
 # test
 *.env
 .pytest_cache
