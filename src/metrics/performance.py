@@ -20,4 +20,6 @@ def get_performance_metric(regex, syntax, n_iter):
     t0 = time.time() * 1000
     for _ in range(n_iter):
         _ = reg.match(TEST_STRING)
-    return round(time.time() * 1000 - t0, 2)
+    return str(
+        round(time.time() * 1000 - t0, 5) / n_iter
+    )
