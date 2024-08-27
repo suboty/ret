@@ -9,7 +9,6 @@ from src.logger import logger
 class MatrixGenerator:
     allowed_matrix_types = [
         'adjacency',
-        'incidence',
     ]
 
     # R x R, R = len(node_types)
@@ -87,18 +86,6 @@ class MatrixGenerator:
             raise AttributeError(f'Error with {node_name} node. Error: {e}')
 
     @staticmethod
-    def get_incidence_matrix(ast):
-        # TODO: add incidence matrix generating
-        matrix = []
-        MatrixGenerator.params_dict = {
-            'atom': [],
-            'escape': [],
-            'repeat': [],
-            'range': []
-        }
-        return matrix
-
-    @staticmethod
     def get_adjacency_matrix(ast, base_matrix):
         MatrixGenerator.params_dict = {
             'atom': [],
@@ -138,8 +125,6 @@ class MatrixGenerator:
         res = None
         if matrix_type == 'adjacency':
             res = MatrixGenerator.get_adjacency_matrix(ast, self._adjacency_base_matrix)
-        elif matrix_type == 'incidence':
-            res = MatrixGenerator.get_incidence_matrix(ast)
 
         self.preprocess_params_dict()
         return res
