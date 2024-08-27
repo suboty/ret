@@ -18,3 +18,29 @@ class Stack:
             return self.stack[i]
         except IndexError:
             return 0
+
+
+def get_pretty_ast(ast):
+    _atoms = []
+    new_ast = []
+    for subgroup in ast:
+        if isinstance(subgroup, tuple):
+            if isinstance(subgroup[0], str) and subgroup[0] == 'atom':
+                _atoms.append(subgroup[1])
+            else:
+                if _atoms:
+                    new_ast.append((
+                        'atom',
+                        ''.join(_atoms)
+                    ))
+                    _atoms = []
+                new_ast.append(get_pretty_ast(subgroup))
+        else:
+            new_ast.append(subgroup)
+    if _atoms:
+        new_ast.append((
+            'atom',
+            ''.join(_atoms)
+        ))
+        _atoms = []
+    return tuple(new_ast)
