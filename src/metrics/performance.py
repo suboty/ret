@@ -12,8 +12,11 @@ TEST_STRING = ''.join([
 
 
 def get_performance_metric(regex, syntax, n_iter):
-    if syntax.lower() == 'python':
+    # TODO: add syntax ids mapping
+    if syntax == 1:
         reg = re.compile(regex)
+    else:
+        raise NotImplementedError(f'Syntax {syntax} is not implemented')
     t0 = time.time() * 1000
     for _ in range(n_iter):
         _ = reg.match(TEST_STRING)
