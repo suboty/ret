@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class NodesTypes(Enum):
+    params = -1
     seq = 0
     atom = 1
     any = 2
