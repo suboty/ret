@@ -11,7 +11,7 @@ class Logger:
 
     @staticmethod
     def __get_logger():
-        root = logging.getLogger()
+        root = logging.getLogger('ret')
         root.setLevel(logging_config['level'])
 
         handler = logging.StreamHandler(logging_config['stream_handler'])
