@@ -2,24 +2,27 @@ import copy
 import re
 from ast import literal_eval
 
-from src.generating import NodesTypes
 from src.logger import logger
+from src.generating import NodesTypes
+from src.generating.python import Generator
 
 
 class MatrixGenerator:
     allowed_matrix_types = [
         'adjacency',
+        'incidence_list'
     ]
 
     # R x R, R = len(node_types)
     _adjacency_base_matrix = [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
     ]
 
     params_dict = {
@@ -43,44 +46,43 @@ class MatrixGenerator:
         return output
 
     @staticmethod
-    def get_incidence_list_by_nodes(nodes, root_node='seq'):
+    def get_incidence_list_by_nodes(nodes, root_node=None):
         output_lists = []
         root_node = root_node
         for subgroup in nodes:
-            if subgroup == 'seq':
-                continue
             if isinstance(subgroup, list):
                 output_lists += MatrixGenerator.get_incidence_list_by_nodes(
                     subgroup, root_node
                 )
             elif isinstance(subgroup, str):
-                incidence = (
-                    MatrixGenerator.get_node_id(root_node),
-                    MatrixGenerator.get_node_id(subgroup)
-                )
-                if incidence[1] == NodesTypes.params.value:
-                    MatrixGenerator.params_dict[root_node].append(subgroup)
-                output_lists.append(incidence)
+                if root_node:
+                    incidence = (
+                        MatrixGenerator.get_node_id(root_node),
+                        MatrixGenerator.get_node_id(subgroup)
+                    )
+                    if incidence[1] == NodesTypes.params.value:
+                        MatrixGenerator.params_dict[root_node].append(subgroup)
+                    output_lists.append(incidence)
                 root_node = subgroup
         return output_lists
 
     @staticmethod
     def get_node_id(node_name):
-        if 'repeat' in node_name:
-            MatrixGenerator.params_dict['repeat'].append(
-                tuple(MatrixGenerator.find_params_reg.findall(node_name)[0][0].split('_'))
-            )
-        elif 'range' in node_name:
-            MatrixGenerator.params_dict['range'].append(
-                tuple(MatrixGenerator.find_params_reg.findall(node_name)[0][0].split('_'))
-            )
-
+        try:
+            if 'repeat' in node_name:
+                MatrixGenerator.params_dict['repeat'].append(
+                    tuple(MatrixGenerator.find_params_reg.findall(node_name)[0][0].split('_'))
+                )
+            elif 'range' in node_name:
+                MatrixGenerator.params_dict['range'].append(
+                    tuple(MatrixGenerator.find_params_reg.findall(node_name)[0][0].split('_'))
+                )
+        except:
+            pass
         node_name = MatrixGenerator.clean_params_reg.sub('', node_name)
         try:
             if len(node_name) == 1:
                 return NodesTypes.params.value
-            if node_name == 'seq':
-                return 5
             return NodesTypes.__members__.get(node_name).value
         except Exception as e:
             raise AttributeError(f'Error with {node_name} node. Error: {e}')
@@ -98,11 +100,17 @@ class MatrixGenerator:
         for x, y in incidence_lists:
             if y == -1:
                 continue
-            matrix[x - 1][y - 1] = 1
+            matrix[x][y] = 1
         return matrix
 
     @staticmethod
     def get_incidence_lists(ast):
+        MatrixGenerator.params_dict = {
+            'atom': [],
+            'escape': [],
+            'repeat': [],
+            'range': []
+        }
         nodes = MatrixGenerator.eat(ast)
         incidence_lists = MatrixGenerator.get_incidence_list_by_nodes(nodes)
         return incidence_lists
@@ -120,11 +128,14 @@ class MatrixGenerator:
         if matrix_type not in matrix_allowed_types:
             raise NotImplementedError(f'Matrix type for generating must be in {matrix_allowed_types}')
 
-        ast = literal_eval(ast)
+        if isinstance(ast, str):
+            ast = literal_eval(ast)
 
         res = None
         if matrix_type == 'adjacency':
             res = MatrixGenerator.get_adjacency_matrix(ast, self._adjacency_base_matrix)
+        elif matrix_type == 'incidence_list':
+            res = MatrixGenerator.get_incidence_lists(ast)
 
         self.preprocess_params_dict()
         return res
