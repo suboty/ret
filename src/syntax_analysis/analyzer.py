@@ -216,5 +216,3 @@ class SyntaxAnalyzer:
         self.current_string = tokens
         result = self.get_tree(current_string=self.current_string)
         return self.end(result)
-
-

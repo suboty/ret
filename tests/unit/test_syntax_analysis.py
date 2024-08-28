@@ -29,9 +29,6 @@ class TestSyntaxAnalysis:
                 try:
                     sa = SyntaxAnalyzer()
                     sa_output = sa(_case[0])
-
-                    logger.warning(str(sa_output).replace(' ', ''))
-
                 except Exception as e:
                     logger.error(
                         message=f'Error while python syntax analyzer working, case {i+1}',
