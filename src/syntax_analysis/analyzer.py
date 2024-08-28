@@ -95,7 +95,10 @@ class SyntaxAnalyzer:
                 if parts:
                     trees = []
                     for part in parts:
-                        trees.append(tuple(self.get_tree(part)))
+                        trees.append((
+                            'altgroup',
+                            tuple(self.get_tree(part))
+                        ))
                     tree.append(
                         (
                             'group',
