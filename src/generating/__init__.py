@@ -8,6 +8,7 @@ class NodesTypes(Enum):
     any = 2
     repeat = 3
     alt = 4
-    group = 5
-    range = 6
-    escape = 7
+    altgroup = 5
+    group = 6
+    range = 7
+    escape = 8
