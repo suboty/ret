@@ -13,10 +13,13 @@ TEST_STRING = ''.join([
 
 def get_performance_metric(regex, syntax, n_iter):
     # TODO: add syntax ids mapping
-    if syntax == 1:
-        reg = re.compile(regex)
-    else:
-        raise NotImplementedError(f'Syntax {syntax} is not implemented')
+    try:
+        if syntax == 1:
+            reg = re.compile(regex)
+        else:
+            raise NotImplementedError(f'Syntax {syntax} is not implemented')
+    except:
+        return None
     t0 = time.time() * 1000
     for _ in range(n_iter):
         _ = reg.match(TEST_STRING)

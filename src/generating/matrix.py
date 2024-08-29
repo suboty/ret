@@ -246,4 +246,7 @@ class GeneratorByIncidence:
         self.params = copy.deepcopy(params)
         self.nodes = nodes
         self.clean_storages()
-        return self.get_regex(incidence_list, params, nodes)
+        try:
+            return self.get_regex(incidence_list, params, nodes)
+        except:
+            return None
