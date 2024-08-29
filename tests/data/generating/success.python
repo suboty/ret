@@ -27,22 +27,22 @@ ab{1,}c.
 
 # --- #TEST_GROUP: ALTERNATIVE GROUPS
 # --- 6 reg: ab?c.|d
-1 ("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("atom","d"),))))
+1 ('seq',('alt',(('altgroup',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',))),('altgroup',(('atom','d'),)))))
 (ab{0,1}c.|d)
 
 # --- 7 reg: abc(c|a)b
-1 ("seq",(("atom","a"),("atom","b"),("atom","c"),("group",("alt",((("atom","c"),),(("atom","a"),)))),("atom","b")))
+1 ('seq',(('atom','a'),('atom','b'),('atom','c'),('group',('alt',(('altgroup',(('atom','c'),)),('altgroup',(('atom','a'),))))),('atom','b')))
 abc(c|a)b
 
 # --- #TEST_GROUP: GROUPS AND QUANTIFIERS AND RANGES
 # --- 8 reg: ab?c.|[0-9]\[
-1 ("seq",("alt",((("atom","a"),("repeat_0_1",("atom","b")),("atom","c"),("any",)),(("range_0_9",),("escape","[")))))
+1 ('seq',('alt',(('altgroup',(('atom','a'),('repeat_0_1',('atom','b')),('atom','c'),('any',))),('altgroup',(('range_0_9',),('escape','['))))))
 (ab{0,1}c.|[0-9]\[)
 
 # --- 9 reg: (a|b)c
-1 ("seq",(("group",("alt",((("atom","a"),),(("atom","b"),)))),("atom","c")))
+1 ('seq',(('group',('alt',(('altgroup',(('atom','a'),)),('altgroup',(('atom','b'),))))),('atom','c')))
 (a|b)c
 
 # --- 10 reg: (a|b{1,2})c
-1 ("seq",(("group",("alt",((("atom","a"),),(("repeat_1_2",("atom","b")),)))),("atom","c")))
+1 ('seq',(('group',('alt',(('altgroup',(('atom','a'),)),('altgroup',(('repeat_1_2',('atom','b')),))))),('atom','c')))
 (a|b{1,2})c

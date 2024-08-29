@@ -21,7 +21,7 @@ class Generator:
         return group + f'{"{"}{params[1]}{","}{params[2]}{"}"}'
 
     def alt(self, subtree):
-        groups = [x for x in subtree[1]]
+        groups = [x[1] for x in subtree[1]]
         regexes = []
 
         for group in groups:

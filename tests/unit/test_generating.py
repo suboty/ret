@@ -71,7 +71,7 @@ class TestGenerating:
                 _output = ast.literal_eval(case[1])
 
                 try:
-                    generator_output = self.matrix_generator(
+                    generator_output, _ = self.matrix_generator(
                         ast=_input,
                         matrix_type='adjacency'
                     )
