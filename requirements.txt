@@ -1,5 +1,7 @@
 # src
-numpy>=2.0.1
+numpy>=1.26.3
+exrex>=0.11.0
+mealpy>=3.0.1
 
 # tests
 pytest>=8.3.2
