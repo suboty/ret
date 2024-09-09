@@ -8,11 +8,12 @@ from src.generating.matrix import GeneratorByIncidence
 from src.metrics.performance import get_performance_metric
 from src.metrics.accuracy import get_match_accuracy
 
-INCIDENCE_LIST_COFF = 2
+INCIDENCE_LIST_COFF = 1
 INCIDENCE_LIST_LEN = 0
 MAX_SOLUTION_VALUE = 0
 N_ITER_FOR_PERFORMANCE = 100
 PHRASES = []
+SEED = 456
 
 # TODO: add syntax choice
 
@@ -67,7 +68,7 @@ def objective_function(solution):
     try:
         return get_solution_metric(solution, PHRASES)
     except:
-        return MAX_SOLUTION_VALUE
+        return MAX_SOLUTION_VALUE * 2
 
 
 class PopulationAlgorithmsOptimizing:
@@ -110,7 +111,7 @@ class PopulationAlgorithmsOptimizing:
             epoch=self.algorithms_params.get('DE').get('epoch'),
             pop_size=self.algorithms_params.get('DE').get('pop_size')
         )
-        g_best = model.solve(problem_dict)
+        g_best = model.solve(problem_dict, seed=SEED)
 
         return g_best.solution
 
@@ -129,7 +130,7 @@ class PopulationAlgorithmsOptimizing:
             c2=2.05,
             alpha=0.4
         )
-        g_best = model.solve(problem_dict)
+        g_best = model.solve(problem_dict, seed=SEED)
 
         return g_best.solution
 

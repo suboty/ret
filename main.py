@@ -2,6 +2,8 @@ import copy
 import pprint
 import argparse
 
+import exrex
+
 from src.logger import logger
 from src.utils import get_pretty_ast
 from src.translator import Translator
@@ -11,6 +13,7 @@ from src.ast_optimizing.population_algorithms import PopulationAlgorithmsOptimiz
 from src.metrics.performance import get_performance_metric
 
 IS_PPRINT = False
+IS_EXREX = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Translate regular expression')
@@ -31,7 +34,10 @@ if __name__ == '__main__':
     input_syntax = args.input
     output_syntax = args.output
 
-    test_phrases = args.phrases
+    if IS_EXREX:
+        test_phrases = list(exrex.generate(input_regex))
+    else:
+        test_phrases = args.phrases
 
     output_regex = translator.translate(string=input_regex, input_syntax=input_syntax, output_syntax=output_syntax)
 
