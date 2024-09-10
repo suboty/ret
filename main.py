@@ -72,6 +72,7 @@ if __name__ == '__main__':
         algorithm='de',
         phrases=test_phrases,
     )
+    de_tf_value = optimizer.last_tf_value
 
     params_dict = copy.deepcopy(matrix_generator.params_dict)
     pso_optimizing_incidence_list = optimizer(
@@ -81,6 +82,7 @@ if __name__ == '__main__':
         algorithm='pso',
         phrases=test_phrases,
     )
+    pso_tf_value = optimizer.last_tf_value
 
     # as is
     params_dict = copy.deepcopy(matrix_generator.params_dict)
@@ -96,6 +98,7 @@ if __name__ == '__main__':
     )
     logger.info('\nAS IS'
                 f'\n--- Performance metric = <{as_is_performance_metric}> sec'
+                f'\n--- Target function value = <{optimizer.max_solution_value}>'
                 f'\n--- AS IS REGEX:\n{output_regex}')
 
     # DE
@@ -112,6 +115,7 @@ if __name__ == '__main__':
     )
     logger.info('\nDE'
                 f'\n--- Performance metric = <{de_performance_metric}> sec'
+                f'\n--- Target function value = <{de_tf_value}>'
                 f'\n--- DE REGEX:\n{de_regex}')
 
     # PSO
@@ -128,4 +132,5 @@ if __name__ == '__main__':
     )
     logger.info('\nPSO'
                 f'\n--- Performance metric = <{pso_performance_metric}> sec'
+                f'\n--- Target function value = <{pso_tf_value}>'
                 f'\n--- PSO REGEX:\n{pso_regex}')

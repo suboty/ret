@@ -98,6 +98,8 @@ class PopulationAlgorithmsOptimizing:
     }
 
     regex_generator = GeneratorByIncidence()
+    last_tf_value = None
+    max_solution_value = None
 
     def get_optimizing_matrix_by_de(self):
 
@@ -150,6 +152,7 @@ class PopulationAlgorithmsOptimizing:
         _nodes = nodes
 
         MAX_SOLUTION_VALUE = get_solution_metric(incidence_list, phrases)
+        self.max_solution_value = MAX_SOLUTION_VALUE
 
         max_id = sorted([int(x) for x in nodes.keys()], reverse=True)[0]
 
@@ -164,16 +167,22 @@ class PopulationAlgorithmsOptimizing:
             ub=(max_id,) * len(incidence_list) * 2 * INCIDENCE_LIST_COFF,
             name="delta"
         )
-
-        match algorithm:
-            case 'pso' | 'particle swarm optimization':
-                optim_incidence_list = self.get_optimizing_matrix_by_pso()
-            case 'de' | 'differential evolution':
-                optim_incidence_list = self.get_optimizing_matrix_by_de()
-
-        optim_incidence_list = optim_incidence_list.round().reshape((INCIDENCE_LIST_LEN * INCIDENCE_LIST_COFF, 2))
-
         try:
+            match algorithm:
+                case 'pso' | 'particle swarm optimization':
+                    optim_incidence_list = self.get_optimizing_matrix_by_pso()
+                case 'de' | 'differential evolution':
+                    optim_incidence_list = self.get_optimizing_matrix_by_de()
+
+            optim_incidence_list = optim_incidence_list.round().reshape(
+                (
+                    INCIDENCE_LIST_LEN * INCIDENCE_LIST_COFF,
+                    2
+                )
+            )
+
+            self.last_tf_value = round(objective_function(optim_incidence_list), 8)
+
             return optim_incidence_list
         except:
             logger.warning('Optimizing regex is not found!')
