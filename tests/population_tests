@@ -1,3 +1,4 @@
+# for demonstration
 python3 main.py -r "a|b{1,2}"
 python3 main.py -r "ab?c.|[0-9]\["
 python3 main.py -r "abc(c|a)."

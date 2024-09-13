@@ -152,7 +152,7 @@ class PopulationAlgorithmsOptimizing:
         _nodes = nodes
 
         MAX_SOLUTION_VALUE = get_solution_metric(incidence_list, phrases)
-        self.max_solution_value = MAX_SOLUTION_VALUE
+        self.max_solution_value = round(MAX_SOLUTION_VALUE, 8)
 
         max_id = sorted([int(x) for x in nodes.keys()], reverse=True)[0]
 
