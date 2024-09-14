@@ -5,6 +5,8 @@
 # service files
 unicode-chars
 *.log
+*.metrics
+*.statistics
 
 # test
 *.env
@@ -12,3 +14,4 @@ unicode-chars
 
 # research
 *.ipynb_checkpoints
+*.png
