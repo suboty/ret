@@ -1,5 +1,8 @@
 import copy
+import os
 import re
+import datetime
+from pathlib import Path
 
 from mealpy import FloatVar, DE, PSO
 
@@ -103,6 +106,9 @@ class PopulationAlgorithmsOptimizing:
     last_tf_value = None
     max_solution_value = None
 
+    def __init__(self):
+        os.makedirs('logs', exist_ok=True)
+
     def get_optimizing_matrix_by_de(self):
 
         problem_dict = {
@@ -110,7 +116,10 @@ class PopulationAlgorithmsOptimizing:
             "minmax": self.algorithms_params.get('DE').get('minmax'),
             "obj_func": objective_function,
             "log_to": "file",
-            "log_file": "result_de.log"
+            "log_file": str(Path(
+                'logs',
+                f'result_de_{datetime.datetime.now().strftime("%d_%m_%y_%I_%M_%s")}.log'
+            ))
         }
 
         model = DE.SADE(
@@ -128,7 +137,10 @@ class PopulationAlgorithmsOptimizing:
             "minmax": self.algorithms_params.get('PSO').get('minmax'),
             "obj_func": objective_function,
             "log_to": "file",
-            "log_file": "result_pso.log"
+            "log_file": str(Path(
+                'logs',
+                f'result_pso_{datetime.datetime.now().strftime("%d_%m_%y_%I_%M_%s")}.log'
+            ))
         }
 
         model = PSO.AIW_PSO(
@@ -190,6 +202,9 @@ class PopulationAlgorithmsOptimizing:
             self.last_tf_value = round(objective_function(optim_incidence_list), 8)
 
             return optim_incidence_list
-        except:
-            logger.warning('Optimizing regex is not found!')
+        except Exception as e:
+            logger.error(
+                message='Error while regex optimizing',
+                exc=e,
+            )
             return incidence_list
