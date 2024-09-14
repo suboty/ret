@@ -4,6 +4,7 @@
 
 # service files
 unicode-chars
+*.log
 
 # test
 *.env

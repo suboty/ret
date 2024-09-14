@@ -58,10 +58,7 @@ if __name__ == '__main__':
         logger.info(f'--- Get AST:\n{pprint.pformat(translator.ast)}')
     else:
         logger.info(f'--- Get AST:\n{get_pretty_ast(translator.ast)}')
-    logger.info(f'--- Get Adjacency Matrix:\n{adjacency_matrix}')
     logger.info(f'--- Get Incidence List:\n{incidence_list}')
-    logger.info(f'--- Get Nodes List:\n{nodes.nodes_types}')
-    logger.info(f'--- Get Params:\n{matrix_generator.params_dict}')
 
     params_dict = copy.deepcopy(matrix_generator.params_dict)
     optimizer = PopulationAlgorithmsOptimizing()

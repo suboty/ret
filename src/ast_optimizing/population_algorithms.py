@@ -55,11 +55,13 @@ def get_solution_metric(solution, phrases):
     coeff = (2. - sum(accuracy)/len(accuracy))
 
     # count performance metric
-    return coeff * float(get_performance_metric(
+    res_metric =  coeff * float(get_performance_metric(
             regex=regex,
             syntax=1,
             n_iter=N_ITER_FOR_PERFORMANCE,
     ))
+
+    return res_metric
 
 
 def objective_function(solution):
@@ -106,7 +108,9 @@ class PopulationAlgorithmsOptimizing:
         problem_dict = {
             "bounds": self.algorithms_params.get('DE').get('bounds'),
             "minmax": self.algorithms_params.get('DE').get('minmax'),
-            "obj_func": objective_function
+            "obj_func": objective_function,
+            "log_to": "file",
+            "log_file": "result_de.log"
         }
 
         model = DE.SADE(
@@ -122,7 +126,9 @@ class PopulationAlgorithmsOptimizing:
         problem_dict = {
             "bounds": self.algorithms_params.get('PSO').get('bounds'),
             "minmax": self.algorithms_params.get('PSO').get('minmax'),
-            "obj_func": objective_function
+            "obj_func": objective_function,
+            "log_to": "file",
+            "log_file": "result_pso.log"
         }
 
         model = PSO.AIW_PSO(
