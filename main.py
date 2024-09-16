@@ -36,6 +36,7 @@ if __name__ == '__main__':
 
     if IS_EXREX:
         test_phrases = list(exrex.generate(input_regex))
+        logger.info(f'--- Get generating strings: {len(test_phrases)}')
     else:
         test_phrases = args.phrases
 

@@ -1,7 +1,5 @@
 import os
-import re
 import argparse
-import datetime
 import statistics
 from pathlib import Path
 
