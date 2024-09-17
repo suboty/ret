@@ -12,6 +12,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 from src.metrics.accuracy import get_match_accuracy
 from src.metrics.performance import get_performance_metric
+from src.metrics.readability import get_readability
 
 
 if __name__ == '__main__':
@@ -38,8 +39,6 @@ if __name__ == '__main__':
             phrase=string
         ))
 
-    print(accuracy_list)
-
     res_accuracy = sum(accuracy_list)/len(accuracy_list)
 
     res_performance = get_performance_metric(
@@ -48,8 +47,14 @@ if __name__ == '__main__':
         n_iter=500
     )
 
+    res_readability = get_readability(
+        regex=output_regex,
+        syntax=1
+    )
+
     print(f'Input Regex <{input_regex}>'
           f'\nOutput Regex <{output_regex}>'
           f'\nValidate strings len: <{len(test_strings)}>'
           f'\n\thas accuracy <{res_accuracy}>'
+          f'\n\tand readability: <{res_readability}>'
           f'\n\tand performance metric <{res_performance}>')
