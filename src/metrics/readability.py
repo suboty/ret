@@ -18,15 +18,28 @@ sa = SyntaxAnalyzer()
 la_python = LexicalAnalyzerPython()
 
 
-def eat(ast, nodes, levels):
-    nodes = nodes
-    levels = levels
+def eat(ast, nodes):
     for subgroup in ast:
         if isinstance(subgroup, str):
-             nodes.append(subgroup)
+            nodes.append(subgroup)
+        else:
+            eat(subgroup, nodes)
+
+def get_levels(ast, levels):
+    for subgroup in ast:
+        if isinstance(subgroup, str):
+            pass
         else:
             levels += 1
-            return eat(subgroup, nodes, levels)
+            levels = get_levels(subgroup, levels)
+    return levels
+
+def get_nodes_and_levels(ast):
+    levels = -1
+    nodes = []
+
+    eat(ast, nodes)
+    levels = get_levels(ast, levels)
     return nodes, levels
 
 def get_readability(regex, syntax):
@@ -36,12 +49,13 @@ def get_readability(regex, syntax):
     if syntax == 1:
         tokens = la_python(regex=regex)
         ast = sa(tokens=tokens)
-        nodes, levels = eat(
+        print(ast)
+        nodes, levels = get_nodes_and_levels(
             ast=ast,
-            nodes=[],
-            levels=-1
         )
+        print(nodes, levels)
         for node in nodes:
+            node = node.split('_')[0]
             if node not in constructions:
                 continue
             metric += constructions_diff[node]
