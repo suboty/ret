@@ -12,9 +12,9 @@ done
 ## de
 python3 scripts/get_metrics_from_logs.py -n de
 python3 scripts/get_statistics_from_metrics.py -n de
-python3 scripts/get_plots -n de
+python3 scripts/get_plots.py -n de
 ## pso
 python3 scripts/get_metrics_from_logs.py -n pso
 python3 scripts/get_statistics_from_metrics.py -n pso
-python3 scripts/get_plots -n pso
+python3 scripts/get_plots.py -n pso
 echo "end for <$1> ..."

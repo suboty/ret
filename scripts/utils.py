@@ -24,7 +24,7 @@ def create_algorithm_plot(
     ax = plt.gca()
 
     ax.set_ylabel("Значение целевой функции, мс", fontsize=12, color='black')  # +
-    ax.set_xlabel("Итерации", fontsize=12, color='black')  # +
+    ax.set_xlabel("Поколения", fontsize=12, color='black')  # +
 
     plt.scatter([n_iter], data[-1], color='red')
 
