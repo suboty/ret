@@ -4,7 +4,7 @@ import re
 import datetime
 from pathlib import Path
 
-from mealpy import FloatVar, DE, PSO
+from mealpy import FloatVar, DE, PSO, SHADE
 
 from src.logger import logger
 from src.generating.matrix import GeneratorByIncidence
@@ -82,6 +82,7 @@ class PopulationAlgorithmsOptimizing:
     allowed_algorithms = [
         'de', 'differential evolution',
         'pso', 'particle swarm optimization',
+        'shade', 'success history adaptation differential evolution'
     ]
 
     algorithms_params = {
@@ -92,13 +93,24 @@ class PopulationAlgorithmsOptimizing:
             "epoch": 100,
             "pop_size": 100,
         },
-
         'PSO': {
             "bounds": FloatVar(),
             "minmax": "min",
             "obj_func": objective_function,
             "epoch": 100,
             "pop_size": 100,
+            "c1": 2.05,
+            "c2": 2.05,
+            "alpha": 0.4
+        },
+        'SHADE': {
+            "bounds": FloatVar(),
+            "minmax": "min",
+            "obj_func": objective_function,
+            "epoch": 100,
+            "pop_size": 100,
+            "miu_f": 0.5,
+            "miu_cr": 0.5
         }
     }
 
@@ -130,6 +142,29 @@ class PopulationAlgorithmsOptimizing:
 
         return g_best.solution
 
+    def get_optimizing_matrix_by_shade(self):
+
+        problem_dict = {
+            "bounds": self.algorithms_params.get('SHADE').get('bounds'),
+            "minmax": self.algorithms_params.get('SHADE').get('minmax'),
+            "obj_func": objective_function,
+            "log_to": "file",
+            "log_file": str(Path(
+                'logs',
+                f'result_shade_{datetime.datetime.now().strftime("%d_%m_%y_%I_%M_%s")}.log'
+            ))
+        }
+
+        model = SHADE.L_SHADE(
+            epoch=self.algorithms_params.get('SHADE').get('epoch'),
+            pop_size=self.algorithms_params.get('SHADE').get('pop_size'),
+            miu_f=self.algorithms_params.get('SHADE').get('miu_f'),
+            miu_cr=self.algorithms_params.get('SHADE').get('miu_cr')
+        )
+        g_best = model.solve(problem_dict, seed=SEED)
+
+        return g_best.solution
+
     def get_optimizing_matrix_by_pso(self):
 
         problem_dict = {
@@ -146,9 +181,9 @@ class PopulationAlgorithmsOptimizing:
         model = PSO.AIW_PSO(
             epoch=self.algorithms_params.get('PSO').get('epoch'),
             pop_size=self.algorithms_params.get('PSO').get('pop_size'),
-            c1=2.05,
-            c2=2.05,
-            alpha=0.4
+            c1=self.algorithms_params.get('PSO').get('c1'),
+            c2=self.algorithms_params.get('PSO').get('c2'),
+            alpha=self.algorithms_params.get('PSO').get('alpha')
         )
         g_best = model.solve(problem_dict, seed=SEED)
 
@@ -174,23 +209,23 @@ class PopulationAlgorithmsOptimizing:
 
         max_id = sorted([int(x) for x in nodes.keys()], reverse=True)[0]
 
+        # TODO: fix params settings
         self.algorithms_params['DE']['bounds'] = FloatVar(
             lb=(0,) * len(incidence_list) * 2 * INCIDENCE_LIST_COFF,
             ub=(max_id,) * len(incidence_list) * 2 * INCIDENCE_LIST_COFF,
             name="delta"
         )
+        self.algorithms_params['PSO']['bounds'] = self.algorithms_params['DE']['bounds']
+        self.algorithms_params['SHADE']['bounds'] = self.algorithms_params['DE']['bounds']
 
-        self.algorithms_params['PSO']['bounds'] = FloatVar(
-            lb=(0,) * len(incidence_list) * 2 * INCIDENCE_LIST_COFF,
-            ub=(max_id,) * len(incidence_list) * 2 * INCIDENCE_LIST_COFF,
-            name="delta"
-        )
         try:
             match algorithm:
                 case 'pso' | 'particle swarm optimization':
                     optim_incidence_list = self.get_optimizing_matrix_by_pso()
                 case 'de' | 'differential evolution':
                     optim_incidence_list = self.get_optimizing_matrix_by_de()
+                case 'shade' | 'success history adaptation differential evolution':
+                    optim_incidence_list = self.get_optimizing_matrix_by_shade()
 
             optim_incidence_list = optim_incidence_list.round().reshape(
                 (

@@ -61,6 +61,7 @@ if __name__ == '__main__':
         logger.info(f'--- Get AST:\n{get_pretty_ast(translator.ast)}')
     logger.info(f'--- Get Incidence List:\n{incidence_list}')
 
+    # de
     params_dict = copy.deepcopy(matrix_generator.params_dict)
     optimizer = PopulationAlgorithmsOptimizing()
     de_optimizing_incidence_list = optimizer(
@@ -72,6 +73,7 @@ if __name__ == '__main__':
     )
     de_tf_value = optimizer.last_tf_value
 
+    # pso
     params_dict = copy.deepcopy(matrix_generator.params_dict)
     pso_optimizing_incidence_list = optimizer(
         incidence_list=incidence_list,
@@ -81,6 +83,17 @@ if __name__ == '__main__':
         phrases=test_phrases,
     )
     pso_tf_value = optimizer.last_tf_value
+
+    # shade
+    params_dict = copy.deepcopy(matrix_generator.params_dict)
+    shade_optimizing_incidence_list = optimizer(
+        incidence_list=incidence_list,
+        params=params_dict,
+        nodes=nodes.nodes_types,
+        algorithm='shade',
+        phrases=test_phrases,
+    )
+    shade_tf_value = optimizer.last_tf_value
 
     # as is
     params_dict = copy.deepcopy(matrix_generator.params_dict)
@@ -132,3 +145,20 @@ if __name__ == '__main__':
                 f'\n--- Performance metric = <{pso_performance_metric}> sec'
                 f'\n--- Target function value = <{pso_tf_value}>'
                 f'\n--- PSO REGEX:\n{pso_regex}')
+
+    # SHADE
+    params_dict = copy.deepcopy(matrix_generator.params_dict)
+    shade_regex = regex_generator_by_incidence(
+        incidence_list=shade_optimizing_incidence_list,
+        params=params_dict,
+        nodes=nodes.nodes_types,
+    )
+    shade_performance_metric = get_performance_metric(
+        regex=shade_regex,
+        syntax=1,
+        n_iter=500
+    )
+    logger.info('\nSHADE'
+                f'\n--- Performance metric = <{shade_performance_metric}> sec'
+                f'\n--- Target function value = <{shade_tf_value}>'
+                f'\n--- SHADE REGEX:\n{shade_regex}')
