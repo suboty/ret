@@ -60,6 +60,7 @@ if __name__ == '__main__':
     else:
         logger.info(f'--- Get AST:\n{get_pretty_ast(translator.ast)}')
     logger.info(f'--- Get Incidence List:\n{incidence_list}')
+    logger.info(f'--- Get Nodes:\n{nodes.nodes_types}')
 
     # de
     params_dict = copy.deepcopy(matrix_generator.params_dict)
