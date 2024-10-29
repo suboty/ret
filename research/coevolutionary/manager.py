@@ -1,3 +1,5 @@
+import time
+import random
 import statistics
 from typing import Callable, Dict, List, Tuple
 
@@ -32,7 +34,8 @@ class CompetitiveManager:
             survive_schema: str = 'best',
             n_iter: int = 100,
             social_card: float = 0.3,
-            penalty: float = 0.05
+            penalty: float = 0.05,
+            seed: int = 123,
     ) -> None:
         self.algorithms = []
         self.verbose = verbose
@@ -50,8 +53,6 @@ class CompetitiveManager:
 
         # storage for algorithm objects
         self.algorithm_objects = []
-        # storage for algorithm populations
-        self.algorithm_populations = []
         # storage for algorithm population numbers
         self.algorithm_population_numbers = {}
         # storage for algorithm statistics
@@ -62,6 +63,8 @@ class CompetitiveManager:
         self.winners_history = []
         # storage for population qualities
         self.population_qualities_history = []
+
+        random.seed(seed)
 
     def get_current_winner(self) -> Tuple:
         winner = None
@@ -131,12 +134,18 @@ class CompetitiveManager:
                 return True
         return False
 
-    def __get_looser_length(self, current_length: int) -> int:
-        penalty_length = int(current_length*(1-self.penalty))
-        social_length = int(current_length*self.social_card)
+    def __get_looser_length(
+            self,
+            current_length: int,
+            social_length: int,
+    ) -> int:
+        penalty_length = int(current_length * (1 - self.penalty))
         if penalty_length < social_length:
             return social_length
         return penalty_length
+
+    def get_algorithm_names(self):
+        return [x[0] for x in self.algorithms]
 
     def __get_populations_qualities(self) -> List[float]:
         algorithm_names = [x[0] for x in self.algorithms]
@@ -146,10 +155,7 @@ class CompetitiveManager:
             q = 0
             for k in range(self.adaptive_interval - 1):
                 q_k = (self.adaptive_interval - k) / (k + 1)
-                try:
-                    q_k *= 1 if self.winners_history[-k] == algorithm else 0
-                except IndexError:
-                    q_k = 0
+                q_k *= 1 if self.winners_history[-(k + 1)][0] == algorithm else 0
                 q += q_k
             algorithm_scores.append(q)
         self.population_qualities_history.append(
@@ -162,11 +168,12 @@ class CompetitiveManager:
             algorithm_number: int,
             population: List,
             population_qualities: List,
+            social_card: int,
     ) -> List:
         if algorithm_number != population_qualities.index(max(population_qualities)):
             population = self.population_survive_schemas[self.survive_schema](
                 population,
-                self.__get_looser_length(len(population))
+                self.__get_looser_length(len(population), social_card)
             )
         return population
 
@@ -212,7 +219,8 @@ class CompetitiveManager:
     def __run_population(
             self,
             algorithm_number: int,
-    ) -> List:
+    ) -> None:
+
         # STEP X.1: select population
         self.algorithms[algorithm_number][4]()
 
@@ -234,10 +242,8 @@ class CompetitiveManager:
             self.algorithm_statistics[algorithm_number]
         )
 
-        return self.algorithm_objects[algorithm_number].population
-
     def run_coevolution(self) -> None:
-
+        t0 = time.time()
         algorithm_names = [x[0] for x in self.algorithms]
 
         for i, algorithm in enumerate(algorithm_names):
@@ -247,9 +253,7 @@ class CompetitiveManager:
             )
 
             # STEP 2: init zero population
-            self.algorithm_populations.append(
-                self.algorithms[i][3]()
-            )
+            self.algorithms[i][3]()
 
             _population_fitness = self.algorithms[i][7]()
             self.shared_resource -= len(_population_fitness)
@@ -267,13 +271,17 @@ class CompetitiveManager:
                 phase='init'
             )
 
+        social_lengths = [
+            int(len(x.population) * self.social_card)
+            for i, x in enumerate(self.algorithm_objects)
+        ]
+
         # STEP 3: while adaptation criteria
         while self.__adaptation_criteria():
             for i, algorithm in enumerate(algorithm_names):
-                current_population = self.__run_population(
+                self.__run_population(
                     algorithm_number=i,
                 )
-                self.algorithm_populations[i] = current_population
                 self.algorithm_population_numbers[i] += 1
 
             # adaptation metrics
@@ -295,10 +303,9 @@ class CompetitiveManager:
         # STEP 4: while termination criteria
         while self.__termination_criteria():
             for i, algorithm in enumerate(algorithm_names):
-                current_population = self.__run_population(
+                self.__run_population(
                     algorithm_number=i,
                 )
-                self.algorithm_populations[i] = current_population
                 self.algorithm_population_numbers[i] += 1
 
             # coevolutionary metrics
@@ -320,12 +327,14 @@ class CompetitiveManager:
             population_qualities = self.__get_populations_qualities()
 
             for i, algorithm in enumerate(algorithm_names):
-                if self.algorithms[i][0] != winner:
-                    self.algorithm_objects[i].population = self.__get_survivors(
-                        algorithm_number=i,
-                        population=self.algorithm_populations[i],
-                        population_qualities=population_qualities
-                    )
+                self.algorithm_objects[i].population = self.__get_survivors(
+                    algorithm_number=i,
+                    population=self.algorithm_objects[i].population,
+                    population_qualities=population_qualities,
+                    social_card=social_lengths[i]
+                )
+
+        print(f'Done in {round(time.time() - t0, 3)} seconds')
 
     @staticmethod
     def _get_algorithm() -> str:
