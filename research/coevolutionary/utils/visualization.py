@@ -1,3 +1,4 @@
+import random
 from typing import Dict, List
 
 import numpy as np
@@ -14,6 +15,13 @@ _statistics_dict = {
     5: 'median',
     6: 'cv',
 }
+
+line_styles = [
+    'solid',
+    'dotted',
+    'dashed',
+    'dashdot'
+]
 
 
 def preprocess_history(history):
@@ -65,31 +73,44 @@ def visualize(
                 alg_dict[i][5].append(row[6])
 
     for i in alg_dict.keys():
-        axs[0, 0].plot(alg_dict[i][0], label=algorithm_names[i])
-        axs[1, 0].plot(alg_dict[i][1], label=algorithm_names[i])
-        axs[0, 1].plot(alg_dict[i][2], label=algorithm_names[i])
-        axs[1, 1].plot(alg_dict[i][3], label=algorithm_names[i])
-        axs[0, 2].plot(alg_dict[i][4], label=algorithm_names[i])
-        axs[1, 2].plot(alg_dict[i][5], label=algorithm_names[i])
+        axs[0, 0].plot(alg_dict[i][0], label=algorithm_names[i], linestyle=random.choice(line_styles))
+        axs[1, 0].plot(alg_dict[i][1], label=algorithm_names[i], linestyle=random.choice(line_styles))
+        axs[0, 1].plot(alg_dict[i][2], label=algorithm_names[i], linestyle=random.choice(line_styles))
+        axs[1, 1].plot(alg_dict[i][3], label=algorithm_names[i], linestyle=random.choice(line_styles))
+        axs[0, 2].plot(alg_dict[i][4], label=algorithm_names[i], linestyle=random.choice(line_styles))
+        axs[1, 2].plot(alg_dict[i][5], label=algorithm_names[i], linestyle=random.choice(line_styles))
 
     axs[0, 0].set_title(_statistics_dict[0])
     axs[0, 0].legend(loc="best")
+    axs[0, 0].set_xlabel('algorithm iterations')
+    axs[0, 0].set_ylabel('length of population')
 
     axs[1, 0].set_title(_statistics_dict[1])
     axs[1, 0].legend(loc="best")
+    axs[1, 0].set_xlabel('algorithm iterations')
+    axs[1, 0].set_ylabel('minimum value of metric in population')
 
     axs[0, 1].set_title(_statistics_dict[2])
     axs[0, 1].legend(loc="best")
+    axs[0, 1].set_xlabel('algorithm iterations')
+    axs[0, 1].set_ylabel('maximum value of metric in population')
 
     axs[1, 1].set_title(_statistics_dict[3])
     axs[1, 1].legend(loc="best")
+    axs[1, 1].set_xlabel('algorithm iterations')
+    axs[1, 1].set_ylabel('average value of metric in population')
 
     axs[0, 2].set_title(_statistics_dict[4])
     axs[0, 2].legend(loc="best")
+    axs[0, 2].set_xlabel('algorithm iterations')
+    axs[0, 2].set_ylabel('stdev of metric values in population')
 
     axs[1, 2].set_title(_statistics_dict[6])
     axs[1, 2].legend(loc="best")
+    axs[1, 2].set_xlabel('algorithm iterations')
+    axs[1, 2].set_ylabel('coefficient of variation of metric values in population')
 
+    plt.tight_layout()
     plt.show()
 
 
@@ -112,8 +133,11 @@ def visualize_algorithms_quality(
             log_history(
                 alg_dicts[i]
             ),
-            label=alg
+            label=alg,
+            linestyle = random.choice(line_styles)
         )
     plt.legend(loc="best")
+    plt.xlabel("algorithm iterations")
+    plt.ylabel("algorithm quality")
     plt.grid()
     plt.show()

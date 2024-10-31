@@ -3,6 +3,7 @@ import random
 import statistics
 from typing import Callable, Dict, List, Tuple
 
+# for nano
 STUB_VALUE = 1.0
 
 
@@ -182,7 +183,7 @@ class CompetitiveManager:
         population_fitness = [x[0] for x in population_fitness]
         _len = len(population_fitness)
         _min = round(min(population_fitness), 6)
-        _max = round(max(population_fitness), 6)
+        _max = round(max([x for x in population_fitness if x != STUB_VALUE]), 6)
         _mean = round(statistics.mean(population_fitness), 6)
         _stdev = round(statistics.stdev(population_fitness), 6)
         _median = round(statistics.median(population_fitness), 6)
@@ -255,7 +256,7 @@ class CompetitiveManager:
             # STEP 2: init zero population
             self.algorithms[i][3]()
 
-            _population_fitness = self.algorithms[i][7]()
+            _population_fitness = self.algorithms[i][7](is_init_population=True)
             self.shared_resource -= len(_population_fitness)
 
             self.algorithm_population_numbers[i] = 1

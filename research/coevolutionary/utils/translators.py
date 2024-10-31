@@ -101,30 +101,9 @@ class Nodes:
 
 
 class ILtoRegexTranslator:
-    def __init__(self, incidence_list, nodes, params):
+    def __init__(self, nodes, params):
         self.params = params
-        self.incidence_list = incidence_list
         self.nodes = nodes
-
-    @staticmethod
-    def preprocess_incidence_list(incidence_list):
-        previous_incidence = incidence_list[0]
-        new_incidence_list = [previous_incidence[0], previous_incidence[1]]
-
-        for incidence in incidence_list[1:]:
-            if incidence[0] == incidence[1] == 0:
-                new_incidence_list.append(-1)
-                continue
-            if previous_incidence[1] == incidence[0]:
-                new_incidence_list.append(incidence[1])
-                previous_incidence = incidence
-                continue
-            else:
-                new_incidence_list.append(incidence[0])
-                new_incidence_list.append(incidence[1])
-                previous_incidence = incidence
-
-        return new_incidence_list
 
     def get_regex(self, incidence_list):
 
@@ -140,6 +119,8 @@ class ILtoRegexTranslator:
             if incidence[0] == 3:
                 continue
             match incidence[1]:
+                case -1:
+                    continue
                 case 0:
                     if incidence[0] == 0:
                         continue
@@ -168,12 +149,21 @@ class ILtoRegexTranslator:
                         regex += self.nodes[incidence[1]]
             if is_repeat:
                 _params = self.params.get('repeat')[0]
-                regex += f'{_params}'
+                regex += '{' + f'{_params}' + '}'
                 is_repeat = False
         return regex
 
-    def regex_compile(self, individual):
+    def regex_compile(self, individual, is_need_string: bool = False):
         try:
-            return re.compile(self.get_regex(individual)), None
+            res = [self.get_regex(individual), None]
+            res[0] = res[0].replace('alt', '').replace('atom', '')
+            if is_need_string:
+                return res
+            else:
+                try:
+                    regex = re.compile(res[0])
+                    return regex, res[1]
+                except Exception as e:
+                    raise e
         except Exception as e:
             return None, e
