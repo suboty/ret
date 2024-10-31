@@ -55,8 +55,7 @@ class ETtoRegexTranslator:
         return result
 
     @staticmethod
-    def regex_compile(individual):
-        global TERMINALS, PARAMS
+    def regex_compile(individual, terminals, params):
         individual = re.sub(
             r'\s',
             '',
@@ -66,8 +65,8 @@ class ETtoRegexTranslator:
         regex = ''.join(
             ETtoRegexTranslator.generator(
                 tokens=tokens,
-                terminals=TERMINALS,
-                params=PARAMS,
+                terminals=terminals,
+                params=params,
             )
         )
         try:
