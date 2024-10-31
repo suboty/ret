@@ -145,12 +145,12 @@ class GEPAlgorithm:
             pset=self.pset,
             ind_pb=2 / (2 * self.head_n + 1)
         )
-        toolbox.pbs['mut_uniform'] = 0.2
+        toolbox.pbs['mut_uniform'] = 0.3
         toolbox.register('mut_invert', geppy.invert, pb=0.1)
         toolbox.register('mut_is_ts', geppy.is_transpose, pb=0.1)
         toolbox.register('mut_ris_ts', geppy.ris_transpose, pb=0.1)
-        toolbox.register('mut_gene_ts', geppy.gene_transpose, pb=0.3)
-        toolbox.register('cx_1p', geppy.crossover_one_point, pb=0.3)
+        toolbox.register('mut_gene_ts', geppy.gene_transpose, pb=0.4)
+        toolbox.register('cx_1p', geppy.crossover_one_point, pb=0.1)
         toolbox.pbs['cx_1p'] = 0.4
         toolbox.register('cx_2p', geppy.crossover_two_point, pb=0.2)
         toolbox.register('cx_gene', geppy.crossover_gene, pb=0.1)
