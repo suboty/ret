@@ -189,12 +189,20 @@ class DEAlgorithm:
 
     def mutate_population(self):
         """Mutate operators for DE population"""
-        for k, agent in enumerate(self.population[1:]):
+        for k, agent in enumerate(self.population):
             a, b, c = self.toolbox.select(self.population)
             y = self.toolbox.clone(agent)
             for i, value in enumerate(agent):
                 if random.random() < self.init_params['cr']:
                     y[i] = a[i] + self.init_params['f'] * (b[i] - c[i])
+            y_fitness = self.toolbox.evaluate(
+                y,
+                X=self.X,
+                Y=self.Y,
+                n_iter=self.n_iter
+            )
+            if y_fitness[0] < agent.fitness.values[0]:
+                self.population[k] = agent
 
     def get_fitness_population(self, is_init_population: bool = False) -> List:
         """Get fitness values for DE population"""
