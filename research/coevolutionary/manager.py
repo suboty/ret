@@ -184,9 +184,9 @@ class CompetitiveManager:
         _len = len(population_fitness)
         _min = round(min(population_fitness), 6)
         _max = round(max([x for x in population_fitness if x != STUB_VALUE]), 6)
-        _mean = round(statistics.mean(population_fitness), 6)
-        _stdev = round(statistics.stdev(population_fitness), 6)
-        _median = round(statistics.median(population_fitness), 6)
+        _mean = round(statistics.mean([x for x in population_fitness if x != STUB_VALUE]), 6)
+        _stdev = round(statistics.stdev([x for x in population_fitness if x != STUB_VALUE]), 6)
+        _median = round(statistics.median([x for x in population_fitness if x != STUB_VALUE]), 6)
         _cv = round(_stdev / _mean, 3)
         return _len, _min, _max, _mean, _stdev, _median, _cv
 
