@@ -4,6 +4,8 @@ from typing import Dict, List
 import numpy as np
 import matplotlib.pyplot as plt
 
+from coevolutionary.utils import parse_history
+
 plt.rcParams["figure.figsize"] = (15, 10)
 
 _statistics_dict = {
@@ -53,25 +55,7 @@ def visualize(
 ):
     fig, axs = plt.subplots(2, 3)
 
-    alg_dict = {}
-
-    for i, key in enumerate(algorithm_history.keys()):
-        for j, row in enumerate(algorithm_history[key]):
-            if j == 0:
-                alg_dict[i] = {}
-                alg_dict[i][0] = [row[0]]
-                alg_dict[i][1] = [row[1]]
-                alg_dict[i][2] = [row[2]]
-                alg_dict[i][3] = [row[3]]
-                alg_dict[i][4] = [row[7]]
-                alg_dict[i][5] = [row[6]]
-            else:
-                alg_dict[i][0].append(row[0])
-                alg_dict[i][1].append(row[1])
-                alg_dict[i][2].append(row[2])
-                alg_dict[i][3].append(row[3])
-                alg_dict[i][4].append(row[7])
-                alg_dict[i][5].append(row[6])
+    alg_dict = parse_history(algorithm_history)
 
     for i in alg_dict.keys():
         axs[0, 0].plot(alg_dict[i][0], label=algorithm_names[i], linestyle=random.choice(line_styles))
