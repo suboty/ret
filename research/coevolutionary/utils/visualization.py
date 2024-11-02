@@ -14,6 +14,7 @@ _statistics_dict = {
     4: 'stdev',
     5: 'median',
     6: 'cv',
+    7: 'invalid numbers'
 }
 
 line_styles = [
@@ -62,14 +63,14 @@ def visualize(
                 alg_dict[i][1] = [row[1]]
                 alg_dict[i][2] = [row[2]]
                 alg_dict[i][3] = [row[3]]
-                alg_dict[i][4] = [row[4]]
+                alg_dict[i][4] = [row[7]]
                 alg_dict[i][5] = [row[6]]
             else:
                 alg_dict[i][0].append(row[0])
                 alg_dict[i][1].append(row[1])
                 alg_dict[i][2].append(row[2])
                 alg_dict[i][3].append(row[3])
-                alg_dict[i][4].append(row[4])
+                alg_dict[i][4].append(row[7])
                 alg_dict[i][5].append(row[6])
 
     for i in alg_dict.keys():
@@ -100,10 +101,10 @@ def visualize(
     axs[1, 1].set_xlabel('algorithm iterations')
     axs[1, 1].set_ylabel('average value of metric in population')
 
-    axs[0, 2].set_title(_statistics_dict[4])
+    axs[0, 2].set_title(_statistics_dict[7])
     axs[0, 2].legend(loc="best")
     axs[0, 2].set_xlabel('algorithm iterations')
-    axs[0, 2].set_ylabel('stdev of metric values in population')
+    axs[0, 2].set_ylabel('invalid individuals in population')
 
     axs[1, 2].set_title(_statistics_dict[6])
     axs[1, 2].legend(loc="best")

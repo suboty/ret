@@ -3,7 +3,7 @@ import time
 import statistics
 
 
-_performance_schema = 'mean'
+_performance_schema = 'median'
 
 
 class Metrics:
@@ -28,8 +28,9 @@ class Metrics:
                     t0 = time.perf_counter_ns()
                     _ = regex.match(test_string)
                     iter_results.append(time.perf_counter_ns() - t0)
-                results.append(statistics.median(iter_results) / len(test_strings))
-            return statistics.mean(results)
+                results.append(statistics.median(iter_results))
+            res = statistics.mean(results)
+            return res
         else:
             t0 = time.time() * 1000
             for _ in range(n_iter):

@@ -3,25 +3,16 @@ import random
 import statistics
 from typing import Callable, Dict, List, Tuple
 
-# for nano
-STUB_VALUE = 1.0
-
-
-def _sort_by_fitness_value(ind):
-    """Only for MEAN framework"""
-    try:
-        return ind.fitness.values[0]
-    except:
-        return STUB_VALUE
+STUB_VALUE = 100_000_000
 
 
 class CompetitiveManager:
     population_survive_schemas = {
         'first': lambda population, max_number: [ind for ind in population[:max_number]],
-        # only for mean framework
+        # only for DEAP framework
         'best': lambda population, max_number: [ind for ind in sorted(
-            population[:max_number], key=lambda x: _sort_by_fitness_value(x)
-        )]
+            population, key=lambda x: x.fitness.values[0]
+        )[:max_number]]
     }
 
     allowed_problems = ['min', 'max']
@@ -82,7 +73,7 @@ class CompetitiveManager:
                     winner_score = _min
                     winner = algorithm
             elif self.problem == 'max':
-                _max = self.algorithm_statistics[i][0]
+                _max = self.algorithm_statistics[i][2]
                 if winner_score:
                     if _max > winner_score:
                         winner_score = _max
@@ -180,15 +171,17 @@ class CompetitiveManager:
 
     @staticmethod
     def __calculate_statistics(population_fitness: List) -> Tuple:
-        population_fitness = [x[0] for x in population_fitness]
         _len = len(population_fitness)
-        _min = round(min(population_fitness), 6)
-        _max = round(max([x for x in population_fitness if x != STUB_VALUE]), 6)
-        _mean = round(statistics.mean([x for x in population_fitness if x != STUB_VALUE]), 6)
-        _stdev = round(statistics.stdev([x for x in population_fitness if x != STUB_VALUE]), 6)
-        _median = round(statistics.median([x for x in population_fitness if x != STUB_VALUE]), 6)
-        _cv = round(_stdev / _mean, 3)
-        return _len, _min, _max, _mean, _stdev, _median, _cv
+        # for deap framework
+        filter_population = [x[0] for x in population_fitness if x[0] != STUB_VALUE]
+        _min = min(filter_population)
+        _max = max(filter_population)
+        _mean = statistics.mean(filter_population)
+        _stdev = statistics.stdev(filter_population)
+        _median = statistics.median(filter_population)
+        _cv = _stdev / _mean
+        _invalid_ind = len(population_fitness) - len(filter_population)
+        return _len, _min, _max, _mean, _stdev, _median, _cv, _invalid_ind
 
     def print_population_statistic(
             self,
@@ -209,6 +202,7 @@ class CompetitiveManager:
             log_string += f'\tstdev: {self.algorithm_statistics[i][4]}'
             log_string += f'\tmedian: {self.algorithm_statistics[i][5]}'
             log_string += f'\tcv: {self.algorithm_statistics[i][6]}'
+            log_string += f'\tinvalid number: {self.algorithm_statistics[i][7]}'
             algorithms_strings.append(log_string)
         print(
             '#' * (max_logger_header_length - (len(phase) + 1)),
@@ -256,7 +250,7 @@ class CompetitiveManager:
             # STEP 2: init zero population
             self.algorithms[i][3]()
 
-            _population_fitness = self.algorithms[i][7](is_init_population=True)
+            _population_fitness = self.algorithms[i][7]()
             self.shared_resource -= len(_population_fitness)
 
             self.algorithm_population_numbers[i] = 1
@@ -274,7 +268,7 @@ class CompetitiveManager:
 
         social_lengths = [
             int(len(x.population) * self.social_card)
-            for i, x in enumerate(self.algorithm_objects)
+            for x in self.algorithm_objects
         ]
 
         # STEP 3: while adaptation criteria

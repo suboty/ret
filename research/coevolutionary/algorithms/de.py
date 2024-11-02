@@ -10,11 +10,6 @@ from coevolutionary.manager import STUB_VALUE
 from coevolutionary.metrics import Metrics
 from coevolutionary.utils.translators import ILtoRegexTranslator
 
-import os
-
-os.chdir('..')
-from src.metrics.readability import get_readability
-os.chdir('research')
 
 # 1 - performance
 # 2 - readability
@@ -35,43 +30,36 @@ def de_evaluate(
         [abs(x) for x in individual]
     ).round().reshape((-1, 2))
 
-    if __SCHEMA == 1:
-        res = translator.regex_compile(individual)
-        if not res[0]:
-            return STUB_VALUE,
-        regex = re.compile(res[0])
-    else:
-        res = translator.regex_compile(individual, is_need_string=True)
-        regex = res[0]
-        if not regex:
-            return STUB_VALUE,
+    res = translator.regex_compile(individual, is_need_string=True)
+    if not res[0]:
+        return STUB_VALUE,
+    regex_string = res[0]
 
     # count accuracy metric
     accuracy = []
-    for x, y in zip(X, Y):
-        accuracy.append(
-            Metrics.get_match_accuracy(
-                regex=regex if __SCHEMA == 2 else re.compile(regex),
-                phrase=x,
-                result=y
-            )
-        )
     try:
-        accuracy = sum(accuracy) / len(accuracy)
-        if __SCHEMA == 1:
-            res_metric = (2 - accuracy) * float(
-                Metrics.get_performance_metric(
-                    regex=regex,
-                    n_iter=n_iter,
-                    test_strings=X
-                ))
-        else:
-            res_metric = (2 - accuracy) * float(
-                Metrics.get_readability(
-                    regex_string=regex,
+        for x, y in zip(X, Y):
+            accuracy.append(
+                Metrics.get_match_accuracy(
+                    regex=re.compile(regex_string),
+                    phrase=x,
+                    result=y
                 )
             )
-    except ZeroDivisionError:
+        accuracy = sum(accuracy) / len(accuracy)
+        if __SCHEMA == 1:
+            res_metric = float(
+                Metrics.get_performance_metric(
+                    regex=re.compile(regex_string),
+                    n_iter=n_iter,
+                    test_strings=X
+                )) / accuracy
+        else:
+            res_metric = float(
+                Metrics.get_readability(
+                    regex_string=regex_string,
+                )) / accuracy
+    except Exception as e:
         res_metric = STUB_VALUE
     return res_metric,
 
@@ -182,42 +170,32 @@ class DEAlgorithm:
 
     def recombine_population(self):
         """Crossover operators in mutate method"""
-        self.population = sorted(
-            self.population,
-            key=lambda x: x.fitness.values[0]
-        )
+        pass
 
     def mutate_population(self):
         """Mutate operators for DE population"""
+        new_population = []
         for k, agent in enumerate(self.population):
             a, b, c = self.toolbox.select(self.population)
             y = self.toolbox.clone(agent)
             for i, value in enumerate(agent):
                 if random.random() < self.init_params['cr']:
                     y[i] = a[i] + self.init_params['f'] * (b[i] - c[i])
-            y_fitness = self.toolbox.evaluate(
+            y.fitness.values = self.toolbox.evaluate(
                 y,
                 X=self.X,
                 Y=self.Y,
                 n_iter=self.n_iter
             )
-            if y_fitness[0] < agent.fitness.values[0]:
-                self.population[k] = agent
+            if y.fitness.values[0] < agent.fitness.values[0]:
+                new_population.append(y)
+            else:
+                new_population.append(agent)
+        self.population = new_population
 
-    def get_fitness_population(self, is_init_population: bool = False) -> List:
+    def get_fitness_population(self) -> List:
         """Get fitness values for DE population"""
-        if is_init_population:
-            fitnesses = []
-            start_index = 0
-        else:
-            fitnesses = [self.population[0].fitness.values]
-            start_index = 1
-        for individual in self.population[start_index:]:
-            individual.fitness.values = self.toolbox.evaluate(
-                individual,
-                X=self.X,
-                Y=self.Y,
-                n_iter=self.n_iter
-            )
+        fitnesses = []
+        for individual in self.population:
             fitnesses.append(individual.fitness.values)
         return fitnesses
