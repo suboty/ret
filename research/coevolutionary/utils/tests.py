@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union, List
 
 from scipy.stats import wilcoxon
 
@@ -6,8 +6,8 @@ from coevolutionary.utils import parse_history
 
 
 def check_wilcoxon(
-        history_a: Dict,
-        history_b: Dict,
+        history_a: Union[List, Dict],
+        history_b: Union[List, Dict],
         a_name: str,
         b_name: str,
         a_index: int,
@@ -16,8 +16,15 @@ def check_wilcoxon(
         metric_name: str,
         confidence: float = 0.05
 ):
-    a = parse_history(history_a)[a_index][metric_number]
-    b = parse_history(history_b)[b_index][metric_number]
+    if isinstance(history_a, List):
+        a = [x[metric_number] for x in history_a]
+    else:
+        a = parse_history(history_a)[a_index][metric_number]
+
+    if isinstance(history_b, List):
+        b = [x[metric_number] for x in history_b]
+    else:
+        b = parse_history(history_b)[b_index][metric_number]
 
     # test works only with same lengths
     if len(a) > len(b):

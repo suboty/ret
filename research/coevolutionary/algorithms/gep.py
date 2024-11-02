@@ -194,6 +194,14 @@ class GEPAlgorithm:
         pop = toolbox.population(n=n)
         return pop
 
+    def get_regex_by_individual(self, individual):
+        res = ETtoRegexTranslator.regex_compile(
+            individual=individual,
+            terminals=self.terminals,
+            params=self.params,
+        )
+        return res[0]
+
     def init_algorithm(self, init_params: Dict):
         """Init GEP algorithm"""
         self.init_params = init_params

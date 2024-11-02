@@ -27,7 +27,6 @@ class CompetitiveManager:
             n_iter: int = 100,
             social_card: float = 0.3,
             penalty: float = 0.05,
-            seed: int = 123,
     ) -> None:
         self.algorithms = []
         self.verbose = verbose
@@ -55,8 +54,6 @@ class CompetitiveManager:
         self.winners_history = []
         # storage for population qualities
         self.population_qualities_history = []
-
-        random.seed(seed)
 
     def get_current_winner(self) -> Tuple:
         winner = None
@@ -182,6 +179,23 @@ class CompetitiveManager:
         _cv = _stdev / _mean
         _invalid_ind = len(population_fitness) - len(filter_population)
         return _len, _min, _max, _mean, _stdev, _median, _cv, _invalid_ind
+
+    def get_best_individual(self):
+        winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])
+        winner_population = self.algorithm_objects[winner_alg_index].population
+
+        winner_fitnesses = [x.fitness.values[0] for x in winner_population]
+        winner_ind_index = winner_fitnesses.index(min(winner_fitnesses))
+
+        winner_regex = self.algorithm_objects[winner_alg_index].get_regex_by_individual(
+            individual=winner_population[winner_ind_index]
+        )
+
+        return winner_regex
+
+    def get_winner_statistics(self):
+        winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])
+        return self.algorithm_history[winner_alg_index]
 
     def print_population_statistic(
             self,

@@ -94,6 +94,20 @@ class DEAlgorithm:
             params=params,
         )
 
+    def get_regex_by_individual(self, individual):
+        if not isinstance(individual, List):
+            individual = individual.tolist()
+
+        individual = np.array(
+            [abs(x) for x in individual]
+        ).round().reshape((-1, 2))
+
+        res = self.translator.regex_compile(
+            individual,
+            is_need_string=True
+        )
+        return res[0]
+
     def set_genetic_operators(self):
         toolbox = base.Toolbox()
         toolbox.register(

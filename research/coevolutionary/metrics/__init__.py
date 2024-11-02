@@ -1,9 +1,7 @@
 import re
-import time
 import statistics
-
-
-_performance_schema = 'median'
+from timeit import Timer
+from functools import partial
 
 
 class Metrics:
@@ -19,24 +17,12 @@ class Metrics:
 
     @staticmethod
     def get_performance_metric(regex, n_iter, test_strings):
-        if _performance_schema == 'median':
-            results = []
-            for _ in range(n_iter):
-                iter_results = []
-                for test_string in test_strings:
-                    # nano
-                    t0 = time.perf_counter_ns()
-                    _ = regex.match(test_string)
-                    iter_results.append(time.perf_counter_ns() - t0)
-                results.append(statistics.median(iter_results))
-            res = statistics.mean(results)
-            return res
-        else:
-            t0 = time.time() * 1000
-            for _ in range(n_iter):
-                for test_string in test_strings:
-                    _ = regex.match(test_string)
-            return ((time.time() * 1000 - t0) / n_iter) / len(test_strings)
+        results = []
+        for test_string in test_strings:
+            timed_run = Timer(partial(regex.match, test_string)).timeit(number=n_iter)
+            results.append(timed_run)
+        res = statistics.mean(results)
+        return res
 
     @staticmethod
     def get_readability(regex_string):
