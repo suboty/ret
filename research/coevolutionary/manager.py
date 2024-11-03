@@ -105,6 +105,12 @@ class CompetitiveManager:
                 ), 'w') as history_file:
                     history_file.write('\n'.join([str(x) for x in data]))
 
+    def save_algorithms_qualities(self):
+        with open(Path(self.path_to_tmp_history), 'qualities') as qualities_file:
+            qualities_file.write(
+                '\n'.join([str(x) for x in self.population_qualities_history])
+            )
+
     def get_current_winner(self) -> Tuple:
         winner = None
         winner_score = None
