@@ -39,6 +39,6 @@ def check_wilcoxon(
 
     print(f'The Wilcoxon test for {metric_name} metric')
     if result.pvalue < confidence:
-        print(f'{__tick_string} According to the Wilcoxon test {a_name} and {b_name} are different\n')
+        print(f'\t{__tick_string} According to the Wilcoxon test {a_name} and {b_name} are different\n')
     else:
-        print(f'{__cross_string} According to the Wilcoxon test {a_name} and {b_name} are similar\n')
+        print(f'\t{__cross_string} According to the Wilcoxon test {a_name} and {b_name} are similar\n')

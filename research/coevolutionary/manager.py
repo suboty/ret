@@ -1,7 +1,10 @@
+import os
 import time
-import random
 import statistics
+from pathlib import Path
 from typing import Callable, Dict, List, Tuple
+
+from coevolutionary.utils import parse_history
 
 STUB_VALUE = 100_000_000
 
@@ -17,6 +20,18 @@ class CompetitiveManager:
 
     allowed_problems = ['min', 'max']
 
+    # _len, _min, _max, _mean, _stdev, _median, _cv, _invalid_ind
+    _statistic_dict = {
+        0: 'length',
+        1: 'minimum',
+        2: 'maximum',
+        3: 'average',
+        4: 'stdev',
+        5: 'median',
+        6: 'cv',
+        7: 'invalid_ind'
+    }
+
     def __init__(
             self,
             adaptive_interval: int,
@@ -27,6 +42,7 @@ class CompetitiveManager:
             n_iter: int = 100,
             social_card: float = 0.3,
             penalty: float = 0.05,
+            experiment_name: str = f'exp_{round(time.time())}'
     ) -> None:
         self.algorithms = []
         self.verbose = verbose
@@ -54,6 +70,40 @@ class CompetitiveManager:
         self.winners_history = []
         # storage for population qualities
         self.population_qualities_history = []
+
+        # prepare tmp storage for results of coevolution
+        os.makedirs('tmp', exist_ok=True)
+        self.path_to_tmp_history = Path(
+            'tmp',
+            experiment_name,
+            self.__get_meta_name()
+        )
+        os.makedirs(self.path_to_tmp_history, exist_ok=True)
+
+    def __get_meta_name(self):
+        return f'comp_coev' \
+               f'_alg{len(self.get_algorithm_names())}' \
+               f'_adap{self.adaptive_interval}' \
+               f'_res{self.shared_resource}'
+
+    def __save_history(self):
+        alg_history = parse_history(
+            self.algorithm_history,
+            is_visualize=False
+        )
+        for i, algorithm in enumerate(self.get_algorithm_names()):
+            os.makedirs(Path(
+                self.path_to_tmp_history,
+                algorithm,
+            ), exist_ok=True)
+            for metric_key in self._statistic_dict:
+                data = alg_history[i][metric_key]
+                with open(Path(
+                    self.path_to_tmp_history,
+                    algorithm,
+                    self._statistic_dict[metric_key]
+                ), 'w') as history_file:
+                    history_file.write('\n'.join([str(x) for x in data]))
 
     def get_current_winner(self) -> Tuple:
         winner = None
@@ -191,7 +241,7 @@ class CompetitiveManager:
             individual=winner_population[winner_ind_index]
         )
 
-        return winner_regex
+        return winner_regex, winner_population[winner_ind_index].fitness.values[0]
 
     def get_winner_statistics(self):
         winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])
@@ -344,6 +394,7 @@ class CompetitiveManager:
                 )
 
         print(f'Done in {round(time.time() - t0, 3)} seconds')
+        self.__save_history()
 
     @staticmethod
     def _get_algorithm() -> str:

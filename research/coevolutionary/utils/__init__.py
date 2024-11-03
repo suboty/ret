@@ -12,26 +12,37 @@ def regex_process(string, regex):
         return None
 
 
-def parse_history(algorithm_history: Dict) -> Dict:
+def parse_history(
+        algorithm_history: Dict,
+        is_visualize: bool = True
+) -> Dict:
     alg_dict = {}
 
     for i, key in enumerate(algorithm_history.keys()):
         for j, row in enumerate(algorithm_history[key]):
             if j == 0:
                 alg_dict[i] = {}
-                alg_dict[i][0] = [row[0]]
-                alg_dict[i][1] = [row[1]]
-                alg_dict[i][2] = [row[2]]
-                alg_dict[i][3] = [row[3]]
-                alg_dict[i][4] = [row[7]]
-                alg_dict[i][5] = [row[6]]
+                if is_visualize:
+                    alg_dict[i][0] = [row[0]]
+                    alg_dict[i][1] = [row[1]]
+                    alg_dict[i][2] = [row[2]]
+                    alg_dict[i][3] = [row[3]]
+                    alg_dict[i][4] = [row[7]]
+                    alg_dict[i][5] = [row[6]]
+                else:
+                    for m in range(8):
+                        alg_dict[i][m] = [row[m]]
             else:
-                alg_dict[i][0].append(row[0])
-                alg_dict[i][1].append(row[1])
-                alg_dict[i][2].append(row[2])
-                alg_dict[i][3].append(row[3])
-                alg_dict[i][4].append(row[7])
-                alg_dict[i][5].append(row[6])
+                if is_visualize:
+                    alg_dict[i][0].append(row[0])
+                    alg_dict[i][1].append(row[1])
+                    alg_dict[i][2].append(row[2])
+                    alg_dict[i][3].append(row[3])
+                    alg_dict[i][4].append(row[7])
+                    alg_dict[i][5].append(row[6])
+                else:
+                    for m in range(8):
+                        alg_dict[i][m].append(row[m])
 
     return alg_dict
 

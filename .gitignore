@@ -16,3 +16,4 @@ unicode-chars
 *.ipynb_checkpoints
 *.png
 research/data/*
+research/tmp/*
