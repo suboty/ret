@@ -106,7 +106,7 @@ class CompetitiveManager:
                     history_file.write('\n'.join([str(x) for x in data]))
 
     def save_algorithms_qualities(self):
-        with open(Path(self.path_to_tmp_history), 'qualities') as qualities_file:
+        with open(Path(self.path_to_tmp_history, 'qualities'), 'w') as qualities_file:
             qualities_file.write(
                 '\n'.join([str(x) for x in self.population_qualities_history])
             )
