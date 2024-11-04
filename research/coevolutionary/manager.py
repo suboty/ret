@@ -227,6 +227,11 @@ class CompetitiveManager:
         _len = len(population_fitness)
         # for deap framework
         filter_population = [x[0] for x in population_fitness if x[0] != STUB_VALUE]
+
+        # if only invalids
+        if len(filter_population) < 2:
+            filter_population = population_fitness
+
         _min = min(filter_population)
         _max = max(filter_population)
         _mean = statistics.mean(filter_population)
