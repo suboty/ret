@@ -230,7 +230,7 @@ class CompetitiveManager:
 
         # if only invalids
         if len(filter_population) < 2:
-            filter_population = population_fitness
+            filter_population = [x[0] for x in population_fitness]
 
         _min = min(filter_population)
         _max = max(filter_population)
