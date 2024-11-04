@@ -82,17 +82,17 @@ if __name__ == '__main__':
     experiment_gep_de = 'gep_de'
 
     de_params_cases = [
-        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
-        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
+        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 1.6, 'mu': 100},
+        {'ndim': 20 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 1.6, 'mu': 100},
+        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.4, 'f': 1.8, 'mu': 100},
+        {'ndim': 20 * 2, 'bounds': [0, 10], 'cr': 0.4, 'f': 1.8, 'mu': 100},
     ]
 
     gep_params_cases = [
-        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 3},
-        {'population_length': 100, 'genes_n': 3, 'head_n': 3, 'n_elites': 10},
-        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 10},
-        {'population_length': 100, 'genes_n': 5, 'head_n': 3, 'n_elites': 3},
+        {'population_length': 100, 'genes_n': 2, 'head_n': 2, 'n_elites': 3},
+        {'population_length': 100, 'genes_n': 3, 'head_n': 2, 'n_elites': 4},
+        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 5},
+        {'population_length': 100, 'genes_n': 5, 'head_n': 2, 'n_elites': 10},
     ]
 
     cm_manager_params = [
@@ -291,6 +291,8 @@ if __name__ == '__main__':
         population_qualities_history = cm.population_qualities_history
         coev_names = cm.get_algorithm_names()
         best_alg_statistics = cm.get_winner_statistics()
+
+        cm.save_algorithms_qualities()
 
         # separately
         print('separately\n')
