@@ -252,7 +252,7 @@ class CompetitiveManager:
             individual=winner_population[winner_ind_index]
         )
 
-        return winner_regex, winner_population[winner_ind_index].fitness.values[0]
+        return [winner_regex, winner_population[winner_ind_index].fitness.values[0]]
 
     def get_winner_statistics(self):
         winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])

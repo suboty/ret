@@ -1,3 +1,6 @@
+import datetime
+import re
+import time
 import random
 
 from tqdm import tqdm
@@ -6,9 +9,11 @@ from coevolutionary.utils import Utils
 from coevolutionary.utils import regex_process
 from coevolutionary.utils.terminals import get_terminals
 from coevolutionary.manager import CompetitiveManager
+from coevolutionary.metrics import Metrics
 from coevolutionary.algorithms.gep import GEPAlgorithm
 from coevolutionary.algorithms.de import DEAlgorithm
 from coevolutionary.utils.tests import check_wilcoxon
+from coevolutionary.db import Experiment, DBRepository, EntityMeta
 
 
 def get_init_data():
@@ -42,6 +47,12 @@ def get_init_data():
         n_fuzzy_strings=5
     )
 
+    init_metric = Metrics.get_performance_metric(
+        regex=re.compile(input_regex),
+        test_strings=test_strings,
+        n_iter=100,
+    )
+
     _X, _Y = Utils.create_training_set(
         test_strings=test_strings,
         original_regex=input_regex,
@@ -55,7 +66,7 @@ def get_init_data():
         custom_symbols=['a', 'b', 'any', 'range', 'escape']
     )
 
-    return _params, _nodes, _X, _Y, _terminals
+    return init_metric, _params, _nodes, _X, _Y, _terminals
 
 
 def add_alg(manager, name, case, alg_object):
@@ -75,24 +86,28 @@ def add_alg(manager, name, case, alg_object):
 if __name__ == '__main__':
     random.seed(456)
 
-    params, nodes, X, Y, terminals = get_init_data()
+    INIT_METRIC, params, nodes, X, Y, terminals = get_init_data()
+    db = DBRepository(
+        database_url=f'sqlite:///coevolution_experiment.db',
+        entity_meta=EntityMeta,
+    )
 
     experiment_only_de = 'only_de'
     experiment_only_gep = 'only_gep'
     experiment_gep_de = 'gep_de'
 
     de_params_cases = [
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 1.6, 'mu': 100},
-        {'ndim': 20 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 1.6, 'mu': 100},
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.4, 'f': 1.8, 'mu': 100},
-        {'ndim': 20 * 2, 'bounds': [0, 10], 'cr': 0.4, 'f': 1.8, 'mu': 100},
+        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
+        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
+        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
+        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
     ]
 
     gep_params_cases = [
-        {'population_length': 100, 'genes_n': 2, 'head_n': 2, 'n_elites': 3},
-        {'population_length': 100, 'genes_n': 3, 'head_n': 2, 'n_elites': 4},
-        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 5},
-        {'population_length': 100, 'genes_n': 5, 'head_n': 2, 'n_elites': 10},
+        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 3},
+        {'population_length': 100, 'genes_n': 3, 'head_n': 3, 'n_elites': 10},
+        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 10},
+        {'population_length': 100, 'genes_n': 5, 'head_n': 3, 'n_elites': 3},
     ]
 
     cm_manager_params = [
@@ -103,6 +118,7 @@ if __name__ == '__main__':
 
     for m_i, manager_case in enumerate(cm_manager_params):
         print(f'### CM MANAGER PARAMS {m_i}')
+        exp_name = f'exp_{round(time.time())}'
         print('### DE ###\n')
         print('coevolution\n')
         # coevolution
@@ -133,6 +149,27 @@ if __name__ == '__main__':
         best_alg_statistics = cm.get_winner_statistics()
 
         cm.save_algorithms_qualities()
+        _best = cm.get_best_individual()
+        if not isinstance(_best[0], str):
+            _best[0] = _best[0].pattern
+        print('\nBest individual: ', _best)
+        db.create(
+            meta=Experiment(
+                experiment_name=exp_name,
+                algorithm_name='de_coev',
+                is_coevolution=1,
+                algorithm_params=f'{";".join([str(x) for x in de_params_cases])}',
+                adaptation_interval=manager_case['adaptive_interval'],
+                shared_resource=manager_case['shared_resource'],
+                penalty=manager_case['penalty'],
+                social_card=manager_case['social_card'],
+                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
+                output_regex=_best[0],
+                input_metric=INIT_METRIC,
+                output_metric=_best[1],
+                created_at=str(datetime.datetime.now())
+            )
+        )
 
         # separately
         print('separately\n')
@@ -166,7 +203,10 @@ if __name__ == '__main__':
             separately_algorithm_history[i] = cm.algorithm_history[0]
             sep_names.append(f'de_{i}_sep')
 
-            print('\nBest individual: ', cm.get_best_individual())
+            _best = cm.get_best_individual()
+            if not isinstance(_best[0], str):
+                _best[0] = _best[0].patternc
+            print('\nBest individual: ', _best)
 
             check_wilcoxon(
                 history_a=cm.algorithm_history,
@@ -177,6 +217,24 @@ if __name__ == '__main__':
                 b_index=i,
                 metric_number=1,
                 metric_name='minimum'
+            )
+
+            db.create(
+                meta=Experiment(
+                    experiment_name=exp_name,
+                    algorithm_name='de_sep',
+                    is_coevolution=0,
+                    algorithm_params=str(de_case),
+                    adaptation_interval=None,
+                    shared_resource=None,
+                    penalty=None,
+                    social_card=None,
+                    input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
+                    output_regex=_best[0],
+                    input_metric=INIT_METRIC,
+                    output_metric=_best[1],
+                    created_at=str(datetime.datetime.now())
+                )
             )
 
         print('### GEP ###\n')
@@ -194,7 +252,7 @@ if __name__ == '__main__':
         )
 
         for i, gep_case in tqdm(enumerate(gep_params_cases)):
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params,)
+            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
             cm = add_alg(
                 manager=cm,
                 name=f'gep_{i}_coev',
@@ -209,6 +267,28 @@ if __name__ == '__main__':
         best_alg_statistics = cm.get_winner_statistics()
 
         cm.save_algorithms_qualities()
+        _best = cm.get_best_individual()
+        if not isinstance(_best[0], str):
+            _best[0] = _best[0].pattern
+        print('\nBest individual: ', _best)
+
+        db.create(
+            meta=Experiment(
+                experiment_name=exp_name,
+                algorithm_name='gep_coev',
+                is_coevolution=1,
+                algorithm_params=f'{";".join([str(x) for x in gep_params_cases])}',
+                adaptation_interval=manager_case['adaptive_interval'],
+                shared_resource=manager_case['shared_resource'],
+                penalty=manager_case['penalty'],
+                social_card=manager_case['social_card'],
+                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
+                output_regex=_best[0],
+                input_metric=INIT_METRIC,
+                output_metric=_best[1],
+                created_at=str(datetime.datetime.now())
+            )
+        )
 
         # separately
         print('separately\n')
@@ -227,7 +307,7 @@ if __name__ == '__main__':
                 experiment_name=experiment_only_gep,
             )
 
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params,)
+            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
 
             cm = add_alg(
                 manager=cm,
@@ -242,7 +322,10 @@ if __name__ == '__main__':
             separately_algorithm_history[i] = cm.algorithm_history[0]
             sep_names.append(f'gep_{i}_sep')
 
-            print('\nBest individual: ', cm.get_best_individual())
+            _best = cm.get_best_individual()
+            if not isinstance(_best[0], str):
+                _best[0] = _best[0].pattern
+            print('\nBest individual: ', _best)
 
             check_wilcoxon(
                 history_a=cm.algorithm_history,
@@ -253,6 +336,24 @@ if __name__ == '__main__':
                 b_index=i,
                 metric_number=1,
                 metric_name='minimum'
+            )
+
+            db.create(
+                meta=Experiment(
+                    experiment_name=exp_name,
+                    algorithm_name='gep_sep',
+                    is_coevolution=0,
+                    algorithm_params=str(gep_case),
+                    adaptation_interval=None,
+                    shared_resource=None,
+                    penalty=None,
+                    social_card=None,
+                    input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
+                    output_regex=_best[0],
+                    input_metric=INIT_METRIC,
+                    output_metric=_best[1],
+                    created_at=str(datetime.datetime.now())
+                )
             )
 
         print('### GEP + DE ###\n')
@@ -277,6 +378,7 @@ if __name__ == '__main__':
                 case=gep_case,
                 alg_object=gep_object
             )
+
         for i, de_case in tqdm(enumerate(de_params_cases)):
             de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
             cm = add_alg(
@@ -293,6 +395,29 @@ if __name__ == '__main__':
         best_alg_statistics = cm.get_winner_statistics()
 
         cm.save_algorithms_qualities()
+        _best = cm.get_best_individual()
+        if not isinstance(_best[0], str):
+            _best[0] = _best[0].pattern
+        print('\nBest individual: ', _best)
+
+        db.create(
+            meta=Experiment(
+                experiment_name=exp_name,
+                algorithm_name='gep_de_coev',
+                is_coevolution=1,
+                algorithm_params=f'{";".join([str(x) for x in de_params_cases])}+'
+                                 f'{";".join([str(x) for x in gep_params_cases])}',
+                adaptation_interval=manager_case['adaptive_interval'],
+                shared_resource=manager_case['shared_resource'],
+                penalty=manager_case['penalty'],
+                social_card=manager_case['social_card'],
+                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
+                output_regex=_best[0],
+                input_metric=INIT_METRIC,
+                output_metric=_best[1],
+                created_at=str(datetime.datetime.now())
+            )
+        )
 
         # separately
         print('separately\n')

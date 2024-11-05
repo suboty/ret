@@ -18,3 +18,4 @@ unicode-chars
 research/data/*
 research/tmp*
 research/run.py
+*.db
