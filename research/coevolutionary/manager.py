@@ -60,6 +60,7 @@ class CompetitiveManager:
         self.algorithms = []
         self.verbose = verbose
         self.n_iter = n_iter
+        self.experiment_name = experiment_name
 
         # coevolution params
         self.adaptive_interval = adaptive_interval
@@ -238,7 +239,7 @@ class CompetitiveManager:
             # write to db
             self.db.create_alg_quality(
                 quality=Qualities(
-                    experiment_name=self.__get_meta_name(),
+                    experiment_name=self.experiment_name,
                     algorithm_name=algorithm,
                     iteration=self.algorithm_population_numbers[i],
                     quality=q,
@@ -307,7 +308,7 @@ class CompetitiveManager:
         # write to db
         self.db.create_experiment(
             meta=Experiment(
-                experiment_name=self.__get_meta_name(),
+                experiment_name=self.experiment_name,
                 algorithm_name=alg_name_db,
                 is_coevolution=0 if len(algorithm_names) == 1 else 1,
                 algorithm_params=self.algorithm_params,
@@ -354,7 +355,7 @@ class CompetitiveManager:
             # write to db
             self.db.create_statistic_cross(
                 statistic=Statistics(
-                    experiment_name=self.__get_meta_name(),
+                    experiment_name=self.experiment_name,
                     algorithm_name=algorithm,
                     iteration=self.algorithm_population_numbers[i],
                     minimum=self.algorithm_statistics[i][1],
