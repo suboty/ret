@@ -11,6 +11,11 @@ from coevolutionary.metrics import Metrics
 from coevolutionary.utils.translators import ILtoRegexTranslator
 
 
+# 1 - performance
+# 2 - readability
+__SCHEMA = 1
+
+
 def de_evaluate(
         individual,
         X: List,
@@ -25,39 +30,43 @@ def de_evaluate(
         [abs(x) for x in individual]
     ).round().reshape((-1, 2))
 
-    res = translator.regex_compile(individual)
-    regex = res[0]
-    if not regex:
+    res = translator.regex_compile(individual, is_need_string=True)
+    if not res[0]:
         return STUB_VALUE,
+    regex_string = res[0]
 
     # count accuracy metric
     accuracy = []
-    for x, y in zip(X, Y):
-        accuracy.append(
-            Metrics.get_match_accuracy(
-                regex=regex,
-                phrase=x,
-                result=y
-            )
-        )
     try:
+        for x, y in zip(X, Y):
+            accuracy.append(
+                Metrics.get_match_accuracy(
+                    regex=re.compile(regex_string),
+                    phrase=x,
+                    result=y
+                )
+            )
         accuracy = sum(accuracy) / len(accuracy)
-        res_metric = float(
-            Metrics.get_performance_metric(
-                regex=regex,
-                n_iter=n_iter,
-                test_strings=X
-            )) / accuracy
-    except ZeroDivisionError:
+        if __SCHEMA == 1:
+            res_metric = float(
+                Metrics.get_performance_metric(
+                    regex=re.compile(regex_string),
+                    n_iter=n_iter,
+                    test_strings=X
+                )) / accuracy
+        else:
+            res_metric = float(
+                Metrics.get_readability(
+                    regex_string=regex_string,
+                )) / accuracy
+    except Exception as e:
         res_metric = STUB_VALUE
-
     return res_metric,
 
 
 class DEAlgorithm:
     def __init__(
             self,
-            incidence_list,
             nodes,
             params,
             X: List,
@@ -73,8 +82,6 @@ class DEAlgorithm:
 
         # de genetic params
         self.__select_number = 3
-        self.__lower_ind_bound = 0
-        self.__higher_ind_bound = 5
 
         self.n_iter = n_iter
 
@@ -85,12 +92,30 @@ class DEAlgorithm:
         self.translator = ILtoRegexTranslator(
             nodes=nodes,
             params=params,
-            incidence_list=incidence_list
         )
+
+    def get_regex_by_individual(self, individual):
+        if not isinstance(individual, List):
+            individual = individual.tolist()
+
+        individual = np.array(
+            [abs(x) for x in individual]
+        ).round().reshape((-1, 2))
+
+        res = self.translator.regex_compile(
+            individual,
+            is_need_string=True
+        )
+        return res[0]
 
     def set_genetic_operators(self):
         toolbox = base.Toolbox()
-        toolbox.register("attr_float", random.uniform, self.__lower_ind_bound, self.__higher_ind_bound)
+        toolbox.register(
+            "attr_float",
+            random.uniform,
+            self.init_params['bounds'][0],
+            self.init_params['bounds'][1]
+        )
         toolbox.register(
             "individual",
             tools.initRepeat,
@@ -163,23 +188,28 @@ class DEAlgorithm:
 
     def mutate_population(self):
         """Mutate operators for DE population"""
+        new_population = []
         for k, agent in enumerate(self.population):
             a, b, c = self.toolbox.select(self.population)
             y = self.toolbox.clone(agent)
-            index = random.randrange(self.init_params['ndim'])
             for i, value in enumerate(agent):
-                if i == index or random.random() < self.init_params['cr']:
+                if random.random() < self.init_params['cr']:
                     y[i] = a[i] + self.init_params['f'] * (b[i] - c[i])
+            y.fitness.values = self.toolbox.evaluate(
+                y,
+                X=self.X,
+                Y=self.Y,
+                n_iter=self.n_iter
+            )
+            if y.fitness.values[0] < agent.fitness.values[0]:
+                new_population.append(y)
+            else:
+                new_population.append(agent)
+        self.population = new_population
 
     def get_fitness_population(self) -> List:
         """Get fitness values for DE population"""
         fitnesses = []
         for individual in self.population:
-            individual.fitness.values = self.toolbox.evaluate(
-                individual,
-                X=self.X,
-                Y=self.Y,
-                n_iter=self.n_iter
-            )
             fitnesses.append(individual.fitness.values)
         return fitnesses

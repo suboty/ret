@@ -1,45 +1,66 @@
+import os
 import time
-import random
 import statistics
-from typing import Callable, Dict, List, Tuple
+import datetime
+from pathlib import Path
+from typing import Callable, Dict, List, Tuple, Optional
 
-STUB_VALUE = 1.0
+from coevolutionary.utils import parse_history
+from coevolutionary.db import (
+    DBRepository,
+    EntityMeta,
+    Experiment,
+    Statistics,
+    Qualities,
+)
 
-
-def _sort_by_fitness_value(ind):
-    """Only for MEAN framework"""
-    try:
-        return ind.fitness.values[0]
-    except:
-        return STUB_VALUE
+STUB_VALUE = 100_000_000
 
 
 class CompetitiveManager:
     population_survive_schemas = {
         'first': lambda population, max_number: [ind for ind in population[:max_number]],
-        # only for mean framework
+        # only for DEAP framework
         'best': lambda population, max_number: [ind for ind in sorted(
-            population[:max_number], key=lambda x: _sort_by_fitness_value(x)
-        )]
+            population, key=lambda x: x.fitness.values[0]
+        )[:max_number]]
     }
 
     allowed_problems = ['min', 'max']
+
+    # _len, _min, _max, _mean, _stdev, _median, _cv, _invalid_ind
+    _statistic_dict = {
+        0: 'length',
+        1: 'minimum',
+        2: 'maximum',
+        3: 'average',
+        4: 'stdev',
+        5: 'median',
+        6: 'cv',
+        7: 'invalid_ind'
+    }
+
+    # can be "db" or "file"
+    _saving_schema = 'db'
 
     def __init__(
             self,
             adaptive_interval: int,
             shared_resource: int,
+            input_regex: Optional[str],
+            input_metric: Optional[float],
             verbose: bool = False,
             problem: str = 'min',
             survive_schema: str = 'best',
             n_iter: int = 100,
             social_card: float = 0.3,
             penalty: float = 0.05,
-            seed: int = 123,
+            experiment_name: str = f'exp_{round(time.time())}',
     ) -> None:
         self.algorithms = []
         self.verbose = verbose
         self.n_iter = n_iter
+        self.experiment_name = experiment_name
 
         # coevolution params
         self.adaptive_interval = adaptive_interval
@@ -64,7 +85,61 @@ class CompetitiveManager:
         # storage for population qualities
         self.population_qualities_history = []
 
-        random.seed(seed)
+        self.algorithm_params = ''
+        if input_regex is not None:
+            if not isinstance(input_regex, str):
+                input_regex = input_regex.pattern
+        self.input_regex = input_regex
+        self.input_metric = input_metric
+
+        if self._saving_schema == 'file':
+            # prepare tmp storage for results of coevolution
+            os.makedirs('tmp', exist_ok=True)
+            self.path_to_tmp_history = Path(
+                'tmp',
+                experiment_name,
+                self.__get_meta_name()
+            )
+            os.makedirs(self.path_to_tmp_history, exist_ok=True)
+        elif self._saving_schema == 'db':
+            # prepare database for saving
+            self.db = DBRepository(
+                database_url='sqlite:///coevolution.db',
+                entity_meta=EntityMeta,
+            )
+
+    def __get_meta_name(self):
+        return f'comp_coev' \
+               f'_alg{len(self.get_algorithm_names())}' \
+               f'_adap{self.adaptive_interval}' \
+               f'_res{self.shared_resource}'
+
+    def __save_history(self):
+        if self._saving_schema == 'file':
+            alg_history = parse_history(
+                self.algorithm_history,
+                is_visualize=False
+            )
+            for i, algorithm in enumerate(self.get_algorithm_names()):
+                os.makedirs(Path(
+                    self.path_to_tmp_history,
+                    algorithm,
+                ), exist_ok=True)
+                for metric_key in self._statistic_dict:
+                    data = alg_history[i][metric_key]
+                    with open(Path(
+                            self.path_to_tmp_history,
+                            algorithm,
+                            self._statistic_dict[metric_key]
+                    ), 'w') as history_file:
+                        history_file.write('\n'.join([str(x) for x in data]))
+
+    def save_algorithms_qualities(self):
+        if self._saving_schema == 'file':
+            with open(Path(self.path_to_tmp_history, 'qualities'), 'w') as qualities_file:
+                qualities_file.write(
+                    '\n'.join([str(x) for x in self.population_qualities_history])
+                )
 
     def get_current_winner(self) -> Tuple:
         winner = None
@@ -81,7 +156,7 @@ class CompetitiveManager:
                     winner_score = _min
                     winner = algorithm
             elif self.problem == 'max':
-                _max = self.algorithm_statistics[i][0]
+                _max = self.algorithm_statistics[i][2]
                 if winner_score:
                     if _max > winner_score:
                         winner_score = _max
@@ -125,6 +200,8 @@ class CompetitiveManager:
             )
         )
 
+        self.algorithm_params += f'{str(init_params)}; '
+
     def __termination_criteria(self) -> bool:
         return self.shared_resource > 0
 
@@ -151,13 +228,25 @@ class CompetitiveManager:
         algorithm_names = [x[0] for x in self.algorithms]
         algorithm_scores = []
 
-        for algorithm in algorithm_names:
+        for i, algorithm in enumerate(algorithm_names):
             q = 0
             for k in range(self.adaptive_interval - 1):
                 q_k = (self.adaptive_interval - k) / (k + 1)
                 q_k *= 1 if self.winners_history[-(k + 1)][0] == algorithm else 0
                 q += q_k
             algorithm_scores.append(q)
+
+            # write to db
+            self.db.create_alg_quality(
+                quality=Qualities(
+                    experiment_name=self.experiment_name,
+                    algorithm_name=algorithm,
+                    iteration=self.algorithm_population_numbers[i],
+                    quality=q,
+                    created_at=str(datetime.datetime.now())
+                )
+            )
+
         self.population_qualities_history.append(
             tuple(algorithm_scores)
         )
@@ -179,15 +268,67 @@ class CompetitiveManager:
 
     @staticmethod
     def __calculate_statistics(population_fitness: List) -> Tuple:
-        population_fitness = [x[0] for x in population_fitness]
         _len = len(population_fitness)
-        _min = round(min(population_fitness), 6)
-        _max = round(max(population_fitness), 6)
-        _mean = round(statistics.mean(population_fitness), 6)
-        _stdev = round(statistics.stdev(population_fitness), 6)
-        _median = round(statistics.median(population_fitness), 6)
-        _cv = round(_stdev / _mean, 3)
-        return _len, _min, _max, _mean, _stdev, _median, _cv
+        # for deap framework
+        filter_population = [x[0] for x in population_fitness if x[0] != STUB_VALUE]
+
+        # if only invalids
+        if len(filter_population) < 2:
+            filter_population = [x[0] for x in population_fitness]
+
+        _min = min(filter_population)
+        _max = max(filter_population)
+        _mean = statistics.mean(filter_population)
+        _stdev = statistics.stdev(filter_population)
+        _median = statistics.median(filter_population)
+        _cv = _stdev / _mean
+        _invalid_ind = len(population_fitness) - len(filter_population)
+        return _len, _min, _max, _mean, _stdev, _median, _cv, _invalid_ind
+
+    def get_best_individual(self):
+        winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])
+        winner_population = self.algorithm_objects[winner_alg_index].population
+
+        winner_fitnesses = [x.fitness.values[0] for x in winner_population]
+        winner_ind_index = winner_fitnesses.index(min(winner_fitnesses))
+
+        winner_regex = self.algorithm_objects[winner_alg_index].get_regex_by_individual(
+            individual=winner_population[winner_ind_index]
+        )
+
+        algorithm_names = self.get_algorithm_names()
+
+        alg_name_db = algorithm_names[0] if len(algorithm_names) == 1 else f'{algorithm_names[0].split("_")[0]}_coev'
+
+        if not isinstance(winner_regex, str):
+            output_regex = winner_regex.pattern
+        else:
+            output_regex = winner_regex
+
+        # write to db
+        self.db.create_experiment(
+            meta=Experiment(
+                experiment_name=self.experiment_name,
+                algorithm_name=alg_name_db,
+                is_coevolution=0 if len(algorithm_names) == 1 else 1,
+                algorithm_params=self.algorithm_params,
+                adaptation_interval=self.adaptive_interval,
+                shared_resource=self.shared_resource,
+                penalty=self.penalty,
+                social_card=self.social_card,
+                input_regex=self.input_regex,
+                input_metric=self.input_metric,
+                output_regex=output_regex,
+                output_metric=winner_population[winner_ind_index].fitness.values[0],
+                created_at=str(datetime.datetime.now())
+            )
+        )
+
+        return [winner_regex, winner_population[winner_ind_index].fitness.values[0]]
+
+    def get_winner_statistics(self):
+        winner_alg_index = self.get_algorithm_names().index(self.winners_history[-1][0])
+        return self.algorithm_history[winner_alg_index]
 
     def print_population_statistic(
             self,
@@ -208,13 +349,34 @@ class CompetitiveManager:
             log_string += f'\tstdev: {self.algorithm_statistics[i][4]}'
             log_string += f'\tmedian: {self.algorithm_statistics[i][5]}'
             log_string += f'\tcv: {self.algorithm_statistics[i][6]}'
+            log_string += f'\tinvalid number: {self.algorithm_statistics[i][7]}'
             algorithms_strings.append(log_string)
-        print(
-            '#' * (max_logger_header_length - (len(phase) + 1)),
-            f'{self.algorithm_population_numbers[0]} - {phase}'
-        )
-        for algorithm_string in algorithms_strings:
-            print(algorithm_string)
+
+            # write to db
+            self.db.create_statistic_cross(
+                statistic=Statistics(
+                    experiment_name=self.experiment_name,
+                    algorithm_name=algorithm,
+                    iteration=self.algorithm_population_numbers[i],
+                    minimum=self.algorithm_statistics[i][1],
+                    maximum=self.algorithm_statistics[i][2],
+                    average=self.algorithm_statistics[i][3],
+                    median=self.algorithm_statistics[i][5],
+                    stdev=self.algorithm_statistics[i][4],
+                    invalid_ind=self.algorithm_statistics[i][7],
+                    length=self.algorithm_statistics[i][0],
+                    cv=self.algorithm_statistics[i][6],
+                    created_at=str(datetime.datetime.now())
+                )
+            )
+
+        if self.verbose:
+            print(
+                '#' * (max_logger_header_length - (len(phase) + 1)),
+                f'{self.algorithm_population_numbers[0]} - {phase}'
+            )
+            for algorithm_string in algorithms_strings:
+                print(algorithm_string)
 
     def __run_population(
             self,
@@ -265,15 +427,14 @@ class CompetitiveManager:
             self.algorithm_history[i] = [self.algorithm_statistics[i]]
 
         # first metrics
-        if self.verbose:
-            self.print_population_statistic(
-                algorithm_names=algorithm_names,
-                phase='init'
-            )
+        self.print_population_statistic(
+            algorithm_names=algorithm_names,
+            phase='init'
+        )
 
         social_lengths = [
             int(len(x.population) * self.social_card)
-            for i, x in enumerate(self.algorithm_objects)
+            for x in self.algorithm_objects
         ]
 
         # STEP 3: while adaptation criteria
@@ -285,11 +446,10 @@ class CompetitiveManager:
                 self.algorithm_population_numbers[i] += 1
 
             # adaptation metrics
-            if self.verbose:
-                self.print_population_statistic(
-                    algorithm_names=algorithm_names,
-                    phase='adaptation'
-                )
+            self.print_population_statistic(
+                algorithm_names=algorithm_names,
+                phase='adaptation'
+            )
 
             winner, winner_score = self.get_current_winner()
 
@@ -309,11 +469,10 @@ class CompetitiveManager:
                 self.algorithm_population_numbers[i] += 1
 
             # coevolutionary metrics
-            if self.verbose:
-                self.print_population_statistic(
-                    algorithm_names=algorithm_names,
-                    phase='coevolution'
-                )
+            self.print_population_statistic(
+                algorithm_names=algorithm_names,
+                phase='coevolution'
+            )
 
             winner, winner_score = self.get_current_winner()
 
@@ -335,6 +494,11 @@ class CompetitiveManager:
                 )
 
         print(f'Done in {round(time.time() - t0, 3)} seconds')
+        self.__save_history()
+        _best = self.get_best_individual()
+        if not isinstance(_best[0], str):
+            _best[0] = _best[0].pattern
+        print(f'Best individual: {_best}')
 
     @staticmethod
     def _get_algorithm() -> str:

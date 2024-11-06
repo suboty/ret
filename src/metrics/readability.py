@@ -25,6 +25,7 @@ def eat(ast, nodes):
         else:
             eat(subgroup, nodes)
 
+
 def get_levels(ast, levels):
     for subgroup in ast:
         if isinstance(subgroup, str):
@@ -34,6 +35,7 @@ def get_levels(ast, levels):
             levels = get_levels(subgroup, levels)
     return levels
 
+
 def get_nodes_and_levels(ast):
     levels = -1
     nodes = []
@@ -42,6 +44,8 @@ def get_nodes_and_levels(ast):
     levels = get_levels(ast, levels)
     return nodes, levels
 
+
+# TODO: FIX Parsing
 def get_readability(regex, syntax):
     constructions = list(constructions_diff.keys())
     metric = 0
@@ -49,11 +53,9 @@ def get_readability(regex, syntax):
     if syntax == 1:
         tokens = la_python(regex=regex)
         ast = sa(tokens=tokens)
-        print(ast)
         nodes, levels = get_nodes_and_levels(
             ast=ast,
         )
-        print(nodes, levels)
         for node in nodes:
             node = node.split('_')[0]
             if node not in constructions:
