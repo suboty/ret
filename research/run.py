@@ -13,11 +13,13 @@ from coevolutionary.metrics import Metrics
 from coevolutionary.algorithms.gep import GEPAlgorithm
 from coevolutionary.algorithms.de import DEAlgorithm
 from coevolutionary.utils.tests import check_wilcoxon
-from coevolutionary.db import Experiment, DBRepository, EntityMeta
+
+
+INPUT_REGEX = '((((a|bb?)|(a|ba?)|([0-9]|.ab))|(cd|dc|ce|de).ab)|(dc))?'
 
 
 def get_init_data():
-    input_regex = '((a|bb?)|(a|ba?)|([0-9]|.ab))'
+    input_regex = INPUT_REGEX
 
     _params = {
         'range': ['0-9'],
@@ -40,6 +42,9 @@ def get_init_data():
         # terminals (get by input regex)
         9: 'a',
         10: 'b',
+        11: 'c',
+        12: 'd',
+        13: 'e'
     }
 
     test_strings = Utils.get_test_strings(
@@ -63,7 +68,7 @@ def get_init_data():
         add_digits=False,
         add_lower_latin_letters=False,
         add_custom_symbols=True,
-        custom_symbols=['a', 'b', 'any', 'range', 'escape']
+        custom_symbols=['a', 'b', 'c', 'd', 'any', 'range', 'escape']
     )
 
     return init_metric, _params, _nodes, _X, _Y, _terminals
@@ -87,215 +92,115 @@ if __name__ == '__main__':
     random.seed(456)
 
     INIT_METRIC, params, nodes, X, Y, terminals = get_init_data()
-    db = DBRepository(
-        database_url=f'sqlite:///coevolution_experiment.db',
-        entity_meta=EntityMeta,
-    )
 
-    experiment_only_de = 'only_de'
+    # experiment_only_de = 'only_de'
     experiment_only_gep = 'only_gep'
-    experiment_gep_de = 'gep_de'
+    # experiment_gep_de = 'gep_de'
 
     de_params_cases = [
-        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
-        {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
-        {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
+        # {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
+        # {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.45, 'f': 1.6, 'mu': 100},
+        # {'ndim': 10 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
+        # {'ndim': 15 * 2, 'bounds': [0, 10], 'cr': 0.3, 'f': 0.8, 'mu': 100},
     ]
 
     gep_params_cases = [
-        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 3},
-        {'population_length': 100, 'genes_n': 3, 'head_n': 3, 'n_elites': 10},
-        {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 10},
-        {'population_length': 100, 'genes_n': 5, 'head_n': 3, 'n_elites': 3},
+        # {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 3},
+        # {'population_length': 100, 'genes_n': 3, 'head_n': 3, 'n_elites': 10},
+        # {'population_length': 100, 'genes_n': 4, 'head_n': 2, 'n_elites': 10},
+        # {'population_length': 100, 'genes_n': 5, 'head_n': 3, 'n_elites': 3},
+        {'population_length': 10, 'genes_n': 3, 'head_n': 2, 'n_elites': 1},
+        {'population_length': 10, 'genes_n': 3, 'head_n': 2, 'n_elites': 1},
+        {'population_length': 10, 'genes_n': 3, 'head_n': 2, 'n_elites': 1},
     ]
 
     cm_manager_params = [
-        {'shared_resource': 5_000, 'social_card': 0.3, 'penalty': 0.05, 'adaptive_interval': 3},
-        {'shared_resource': 10_000, 'social_card': 0.3, 'penalty': 0.1, 'adaptive_interval': 5},
-        {'shared_resource': 20_000, 'social_card': 0.3, 'penalty': 0.15, 'adaptive_interval': 10},
+        {'shared_resource': 400, 'social_card': 0.2, 'penalty': 0.1, 'adaptive_interval': 5}
+        # {'shared_resource': 5_000, 'social_card': 0.3, 'penalty': 0.05, 'adaptive_interval': 3},
+        # {'shared_resource': 10_000, 'social_card': 0.3, 'penalty': 0.1, 'adaptive_interval': 5},
+        # {'shared_resource': 20_000, 'social_card': 0.3, 'penalty': 0.15, 'adaptive_interval': 10},
     ]
+    for _ in range(20):
+        for m_i, manager_case in enumerate(cm_manager_params):
+            print(f'### CM MANAGER PARAMS {m_i}')
+            exp_name = f'exp_{round(time.time())}'
+            # print('### DE ###\n')
+            # print('coevolution\n')
+            # # coevolution
+            # cm = CompetitiveManager(
+            #     adaptive_interval=manager_case['adaptive_interval'],
+            #     shared_resource=manager_case['shared_resource'],
+            #     verbose=False,
+            #     problem='min',
+            #     survive_schema='best',
+            #     social_card=manager_case['social_card'],
+            #     penalty=manager_case['penalty'],
+            #     experiment_name=experiment_only_de,
+            # )
+            #
+            # for i, de_case in tqdm(enumerate(de_params_cases)):
+            #     de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'de_{i}_coev',
+            #         case=de_case,
+            #         alg_object=de_object
+            #     )
+            # cm.run_coevolution()
+            #
+            # coevolution_algorithm_history = cm.algorithm_history
+            # population_qualities_history = cm.population_qualities_history
+            # coev_names = cm.get_algorithm_names()
+            # best_alg_statistics = cm.get_winner_statistics()
+            #
+            # cm.save_algorithms_qualities()
+            #
+            # # separately
+            # print('separately\n')
+            # separately_algorithm_history = {}
+            # sep_names = []
+            #
+            # for i, de_case in tqdm(enumerate(de_params_cases)):
+            #     cm = CompetitiveManager(
+            #         adaptive_interval=manager_case['adaptive_interval'],
+            #         shared_resource=manager_case['shared_resource'],
+            #         verbose=False,
+            #         problem='min',
+            #         survive_schema='best',
+            #         social_card=manager_case['social_card'],
+            #         penalty=manager_case['penalty'],
+            #         experiment_name=experiment_only_de,
+            #     )
+            #
+            #     de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
+            #
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'de_{i}_sep',
+            #         case=de_case,
+            #         alg_object=de_object
+            #     )
+            #
+            #     # overload run
+            #     cm.run_coevolution()
+            #
+            #     separately_algorithm_history[i] = cm.algorithm_history[0]
+            #     sep_names.append(f'de_{i}_sep')
+            #
+            #     check_wilcoxon(
+            #         history_a=cm.algorithm_history,
+            #         history_b=best_alg_statistics,
+            #         a_name=f'de_{i}_sep',
+            #         b_name=f'best of coevolutionary de',
+            #         a_index=0,
+            #         b_index=i,
+            #         metric_number=1,
+            #         metric_name='minimum'
+            #     )
 
-    for m_i, manager_case in enumerate(cm_manager_params):
-        print(f'### CM MANAGER PARAMS {m_i}')
-        exp_name = f'exp_{round(time.time())}'
-        print('### DE ###\n')
-        print('coevolution\n')
-        # coevolution
-        cm = CompetitiveManager(
-            adaptive_interval=manager_case['adaptive_interval'],
-            shared_resource=manager_case['shared_resource'],
-            verbose=False,
-            problem='min',
-            survive_schema='best',
-            social_card=manager_case['social_card'],
-            penalty=manager_case['penalty'],
-            experiment_name=experiment_only_de,
-        )
-
-        for i, de_case in tqdm(enumerate(de_params_cases)):
-            de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
-            cm = add_alg(
-                manager=cm,
-                name=f'de_{i}_coev',
-                case=de_case,
-                alg_object=de_object
-            )
-        cm.run_coevolution()
-
-        coevolution_algorithm_history = cm.algorithm_history
-        population_qualities_history = cm.population_qualities_history
-        coev_names = cm.get_algorithm_names()
-        best_alg_statistics = cm.get_winner_statistics()
-
-        cm.save_algorithms_qualities()
-        _best = cm.get_best_individual()
-        if not isinstance(_best[0], str):
-            _best[0] = _best[0].pattern
-        print('\nBest individual: ', _best)
-        db.create(
-            meta=Experiment(
-                experiment_name=exp_name,
-                algorithm_name='de_coev',
-                is_coevolution=1,
-                algorithm_params=f'{";".join([str(x) for x in de_params_cases])}',
-                adaptation_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                penalty=manager_case['penalty'],
-                social_card=manager_case['social_card'],
-                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
-                output_regex=_best[0],
-                input_metric=INIT_METRIC,
-                output_metric=_best[1],
-                created_at=str(datetime.datetime.now())
-            )
-        )
-
-        # separately
-        print('separately\n')
-        separately_algorithm_history = {}
-        sep_names = []
-
-        for i, de_case in tqdm(enumerate(de_params_cases)):
-            cm = CompetitiveManager(
-                adaptive_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                verbose=False,
-                problem='min',
-                survive_schema='best',
-                social_card=manager_case['social_card'],
-                penalty=manager_case['penalty'],
-                experiment_name=experiment_only_de,
-            )
-
-            de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
-
-            cm = add_alg(
-                manager=cm,
-                name=f'de_{i}_sep',
-                case=de_case,
-                alg_object=de_object
-            )
-
-            # overload run
-            cm.run_coevolution()
-
-            separately_algorithm_history[i] = cm.algorithm_history[0]
-            sep_names.append(f'de_{i}_sep')
-
-            _best = cm.get_best_individual()
-            if not isinstance(_best[0], str):
-                _best[0] = _best[0].patternc
-            print('\nBest individual: ', _best)
-
-            check_wilcoxon(
-                history_a=cm.algorithm_history,
-                history_b=best_alg_statistics,
-                a_name=f'de_{i}_sep',
-                b_name=f'best of coevolutionary de',
-                a_index=0,
-                b_index=i,
-                metric_number=1,
-                metric_name='minimum'
-            )
-
-            db.create(
-                meta=Experiment(
-                    experiment_name=exp_name,
-                    algorithm_name='de_sep',
-                    is_coevolution=0,
-                    algorithm_params=str(de_case),
-                    adaptation_interval=None,
-                    shared_resource=None,
-                    penalty=None,
-                    social_card=None,
-                    input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
-                    output_regex=_best[0],
-                    input_metric=INIT_METRIC,
-                    output_metric=_best[1],
-                    created_at=str(datetime.datetime.now())
-                )
-            )
-
-        print('### GEP ###\n')
-        print('coevolution\n')
-        # coevolution
-        cm = CompetitiveManager(
-            adaptive_interval=manager_case['adaptive_interval'],
-            shared_resource=manager_case['shared_resource'],
-            verbose=False,
-            problem='min',
-            survive_schema='best',
-            social_card=manager_case['social_card'],
-            penalty=manager_case['penalty'],
-            experiment_name=experiment_only_gep,
-        )
-
-        for i, gep_case in tqdm(enumerate(gep_params_cases)):
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
-            cm = add_alg(
-                manager=cm,
-                name=f'gep_{i}_coev',
-                case=gep_case,
-                alg_object=gep_object
-            )
-        cm.run_coevolution()
-
-        coevolution_algorithm_history = cm.algorithm_history
-        population_qualities_history = cm.population_qualities_history
-        coev_names = cm.get_algorithm_names()
-        best_alg_statistics = cm.get_winner_statistics()
-
-        cm.save_algorithms_qualities()
-        _best = cm.get_best_individual()
-        if not isinstance(_best[0], str):
-            _best[0] = _best[0].pattern
-        print('\nBest individual: ', _best)
-
-        db.create(
-            meta=Experiment(
-                experiment_name=exp_name,
-                algorithm_name='gep_coev',
-                is_coevolution=1,
-                algorithm_params=f'{";".join([str(x) for x in gep_params_cases])}',
-                adaptation_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                penalty=manager_case['penalty'],
-                social_card=manager_case['social_card'],
-                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
-                output_regex=_best[0],
-                input_metric=INIT_METRIC,
-                output_metric=_best[1],
-                created_at=str(datetime.datetime.now())
-            )
-        )
-
-        # separately
-        print('separately\n')
-        separately_algorithm_history = {}
-        sep_names = []
-
-        for i, gep_case in tqdm(enumerate(gep_params_cases)):
+            print('### GEP ###')
+            print('\nCOEVOLUTION\n')
+            # coevolution
             cm = CompetitiveManager(
                 adaptive_interval=manager_case['adaptive_interval'],
                 shared_resource=manager_case['shared_resource'],
@@ -305,201 +210,193 @@ if __name__ == '__main__':
                 social_card=manager_case['social_card'],
                 penalty=manager_case['penalty'],
                 experiment_name=experiment_only_gep,
+                input_regex=INPUT_REGEX,
+                input_metric=INIT_METRIC
             )
 
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
-
-            cm = add_alg(
-                manager=cm,
-                name=f'gep_{i}_sep',
-                case=gep_case,
-                alg_object=gep_object
-            )
-
-            # overload run
-            cm.run_coevolution()
-
-            separately_algorithm_history[i] = cm.algorithm_history[0]
-            sep_names.append(f'gep_{i}_sep')
-
-            _best = cm.get_best_individual()
-            if not isinstance(_best[0], str):
-                _best[0] = _best[0].pattern
-            print('\nBest individual: ', _best)
-
-            check_wilcoxon(
-                history_a=cm.algorithm_history,
-                history_b=best_alg_statistics,
-                a_name=f'gep_{i}_sep',
-                b_name=f'best of coevolutionary gep',
-                a_index=0,
-                b_index=i,
-                metric_number=1,
-                metric_name='minimum'
-            )
-
-            db.create(
-                meta=Experiment(
-                    experiment_name=exp_name,
-                    algorithm_name='gep_sep',
-                    is_coevolution=0,
-                    algorithm_params=str(gep_case),
-                    adaptation_interval=None,
-                    shared_resource=None,
-                    penalty=None,
-                    social_card=None,
-                    input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
-                    output_regex=_best[0],
-                    input_metric=INIT_METRIC,
-                    output_metric=_best[1],
-                    created_at=str(datetime.datetime.now())
+            for i, gep_case in enumerate(gep_params_cases):
+                gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
+                cm = add_alg(
+                    manager=cm,
+                    name=f'gep_{i}_coev',
+                    case=gep_case,
+                    alg_object=gep_object
                 )
-            )
-
-        print('### GEP + DE ###\n')
-        print('coevolution\n')
-        # coevolution
-        cm = CompetitiveManager(
-            adaptive_interval=manager_case['adaptive_interval'],
-            shared_resource=manager_case['shared_resource'],
-            verbose=False,
-            problem='min',
-            survive_schema='best',
-            social_card=manager_case['social_card'],
-            penalty=manager_case['penalty'],
-            experiment_name=experiment_gep_de,
-        )
-
-        for i, gep_case in tqdm(enumerate(gep_params_cases)):
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
-            cm = add_alg(
-                manager=cm,
-                name=f'gep_{i}_coev',
-                case=gep_case,
-                alg_object=gep_object
-            )
-
-        for i, de_case in tqdm(enumerate(de_params_cases)):
-            de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
-            cm = add_alg(
-                manager=cm,
-                name=f'de_{i}_coev',
-                case=de_case,
-                alg_object=de_object
-            )
-        cm.run_coevolution()
-
-        coevolution_algorithm_history = cm.algorithm_history
-        population_qualities_history = cm.population_qualities_history
-        coev_names = cm.get_algorithm_names()
-        best_alg_statistics = cm.get_winner_statistics()
-
-        cm.save_algorithms_qualities()
-        _best = cm.get_best_individual()
-        if not isinstance(_best[0], str):
-            _best[0] = _best[0].pattern
-        print('\nBest individual: ', _best)
-
-        db.create(
-            meta=Experiment(
-                experiment_name=exp_name,
-                algorithm_name='gep_de_coev',
-                is_coevolution=1,
-                algorithm_params=f'{";".join([str(x) for x in de_params_cases])}+'
-                                 f'{";".join([str(x) for x in gep_params_cases])}',
-                adaptation_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                penalty=manager_case['penalty'],
-                social_card=manager_case['social_card'],
-                input_regex='((a|bb?)|(a|ba?)|([0-9]|.ab))',
-                output_regex=_best[0],
-                input_metric=INIT_METRIC,
-                output_metric=_best[1],
-                created_at=str(datetime.datetime.now())
-            )
-        )
-
-        # separately
-        print('separately\n')
-        separately_algorithm_history = {}
-        sep_names = []
-
-        for i, gep_case in tqdm(enumerate(gep_params_cases)):
-            cm = CompetitiveManager(
-                adaptive_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                verbose=False,
-                problem='min',
-                survive_schema='best',
-                social_card=manager_case['social_card'],
-                penalty=manager_case['penalty'],
-                experiment_name=experiment_gep_de,
-            )
-
-            gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
-
-            cm = add_alg(
-                manager=cm,
-                name=f'gep_{i}_sep',
-                case=gep_case,
-                alg_object=gep_object
-            )
-
-            # overload run
             cm.run_coevolution()
 
-            separately_algorithm_history[i] = cm.algorithm_history[0]
-            sep_names.append(f'gep_{i}_sep')
+            coevolution_algorithm_history = cm.algorithm_history
+            population_qualities_history = cm.population_qualities_history
+            coev_names = cm.get_algorithm_names()
+            best_alg_statistics = cm.get_winner_statistics()
 
-            print('\nBest individual: ', cm.get_best_individual())
+            cm.save_algorithms_qualities()
 
-            check_wilcoxon(
-                history_a=cm.algorithm_history,
-                history_b=best_alg_statistics,
-                a_name=f'gep_{i}_sep',
-                b_name=f'best of coevolutionary gep',
-                a_index=0,
-                b_index=i,
-                metric_number=1,
-                metric_name='minimum'
-            )
+            # separately
+            print('\nSEPARATELY\n')
+            separately_algorithm_history = {}
+            sep_names = []
 
-        for i, de_case in tqdm(enumerate(de_params_cases)):
-            cm = CompetitiveManager(
-                adaptive_interval=manager_case['adaptive_interval'],
-                shared_resource=manager_case['shared_resource'],
-                verbose=False,
-                problem='min',
-                survive_schema='best',
-                social_card=manager_case['social_card'],
-                penalty=manager_case['penalty'],
-                experiment_name=experiment_gep_de,
-            )
+            for i, gep_case in enumerate(gep_params_cases):
+                cm = CompetitiveManager(
+                    adaptive_interval=manager_case['adaptive_interval'],
+                    shared_resource=manager_case['shared_resource'],
+                    verbose=False,
+                    problem='min',
+                    survive_schema='best',
+                    social_card=manager_case['social_card'],
+                    penalty=manager_case['penalty'],
+                    experiment_name=experiment_only_gep,
+                    input_regex=INPUT_REGEX,
+                    input_metric=INIT_METRIC
+                )
 
-            de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
+                gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
 
-            cm = add_alg(
-                manager=cm,
-                name=f'de_{i}_sep',
-                case=de_case,
-                alg_object=de_object
-            )
+                cm = add_alg(
+                    manager=cm,
+                    name=f'gep_{i}_sep',
+                    case=gep_case,
+                    alg_object=gep_object
+                )
 
-            # overload run
-            cm.run_coevolution()
+                # overload run
+                cm.run_coevolution()
 
-            separately_algorithm_history[i] = cm.algorithm_history[0]
-            sep_names.append(f'de_{i}_sep')
+                separately_algorithm_history[i] = cm.algorithm_history[0]
+                sep_names.append(f'gep_{i}_sep')
 
-            print('\nBest individual: ', cm.get_best_individual())
+                check_wilcoxon(
+                    history_a=cm.algorithm_history,
+                    history_b=best_alg_statistics,
+                    a_name=f'gep_{i}_sep',
+                    b_name=f'best of coevolutionary gep',
+                    a_index=0,
+                    b_index=i,
+                    metric_number=1,
+                    metric_name='minimum'
+                )
 
-            check_wilcoxon(
-                history_a=cm.algorithm_history,
-                history_b=best_alg_statistics,
-                a_name=f'de_{i}_sep',
-                b_name=f'best of coevolutionary de',
-                a_index=0,
-                b_index=i,
-                metric_number=1,
-                metric_name='minimum'
-            )
+            # print('### GEP + DE ###\n')
+            # print('coevolution\n')
+            # # coevolution
+            # cm = CompetitiveManager(
+            #     adaptive_interval=manager_case['adaptive_interval'],
+            #     shared_resource=manager_case['shared_resource'],
+            #     verbose=False,
+            #     problem='min',
+            #     survive_schema='best',
+            #     social_card=manager_case['social_card'],
+            #     penalty=manager_case['penalty'],
+            #     experiment_name=experiment_gep_de,
+            # )
+            #
+            # for i, gep_case in tqdm(enumerate(gep_params_cases)):
+            #     gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'gep_{i}_coev',
+            #         case=gep_case,
+            #         alg_object=gep_object
+            #     )
+            #
+            # for i, de_case in tqdm(enumerate(de_params_cases)):
+            #     de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'de_{i}_coev',
+            #         case=de_case,
+            #         alg_object=de_object
+            #     )
+            # cm.run_coevolution()
+            #
+            # coevolution_algorithm_history = cm.algorithm_history
+            # population_qualities_history = cm.population_qualities_history
+            # coev_names = cm.get_algorithm_names()
+            # best_alg_statistics = cm.get_winner_statistics()
+            #
+            # cm.save_algorithms_qualities()
+            #
+            # # separately
+            # print('separately\n')
+            # separately_algorithm_history = {}
+            # sep_names = []
+            #
+            # for i, gep_case in tqdm(enumerate(gep_params_cases)):
+            #     cm = CompetitiveManager(
+            #         adaptive_interval=manager_case['adaptive_interval'],
+            #         shared_resource=manager_case['shared_resource'],
+            #         verbose=False,
+            #         problem='min',
+            #         survive_schema='best',
+            #         social_card=manager_case['social_card'],
+            #         penalty=manager_case['penalty'],
+            #         experiment_name=experiment_gep_de,
+            #     )
+            #
+            #     gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
+            #
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'gep_{i}_sep',
+            #         case=gep_case,
+            #         alg_object=gep_object
+            #     )
+            #
+            #     # overload run
+            #     cm.run_coevolution()
+            #
+            #     separately_algorithm_history[i] = cm.algorithm_history[0]
+            #     sep_names.append(f'gep_{i}_sep')
+            #
+            #     print('\nBest individual: ', cm.get_best_individual())
+            #
+            #     check_wilcoxon(
+            #         history_a=cm.algorithm_history,
+            #         history_b=best_alg_statistics,
+            #         a_name=f'gep_{i}_sep',
+            #         b_name=f'best of coevolutionary gep',
+            #         a_index=0,
+            #         b_index=i,
+            #         metric_number=1,
+            #         metric_name='minimum'
+            #     )
+            #
+            # for i, de_case in tqdm(enumerate(de_params_cases)):
+            #     cm = CompetitiveManager(
+            #         adaptive_interval=manager_case['adaptive_interval'],
+            #         shared_resource=manager_case['shared_resource'],
+            #         verbose=False,
+            #         problem='min',
+            #         survive_schema='best',
+            #         social_card=manager_case['social_card'],
+            #         penalty=manager_case['penalty'],
+            #         experiment_name=experiment_gep_de,
+            #     )
+            #
+            #     de_object = DEAlgorithm(nodes=nodes, params=params, X=X, Y=Y, n_iter=100)
+            #
+            #     cm = add_alg(
+            #         manager=cm,
+            #         name=f'de_{i}_sep',
+            #         case=de_case,
+            #         alg_object=de_object
+            #     )
+            #
+            #     # overload run
+            #     cm.run_coevolution()
+            #
+            #     separately_algorithm_history[i] = cm.algorithm_history[0]
+            #     sep_names.append(f'de_{i}_sep')
+            #
+            #     print('\nBest individual: ', cm.get_best_individual())
+            #
+            #     check_wilcoxon(
+            #         history_a=cm.algorithm_history,
+            #         history_b=best_alg_statistics,
+            #         a_name=f'de_{i}_sep',
+            #         b_name=f'best of coevolutionary de',
+            #         a_index=0,
+            #         b_index=i,
+            #         metric_number=1,
+            #         metric_name='minimum'
+            #     )

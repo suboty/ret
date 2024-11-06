@@ -1,10 +1,18 @@
 import os
 import time
 import statistics
+import datetime
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 
 from coevolutionary.utils import parse_history
+from coevolutionary.db import (
+    DBRepository,
+    EntityMeta,
+    Experiment,
+    Statistics,
+    Qualities,
+)
 
 STUB_VALUE = 100_000_000
 
@@ -32,17 +40,22 @@ class CompetitiveManager:
         7: 'invalid_ind'
     }
 
+    # can be "db" or "file"
+    _saving_schema = 'db'
+
     def __init__(
             self,
             adaptive_interval: int,
             shared_resource: int,
+            input_regex: Optional[str],
+            input_metric: Optional[float],
             verbose: bool = False,
             problem: str = 'min',
             survive_schema: str = 'best',
             n_iter: int = 100,
             social_card: float = 0.3,
             penalty: float = 0.05,
-            experiment_name: str = f'exp_{round(time.time())}'
+            experiment_name: str = f'exp_{round(time.time())}',
     ) -> None:
         self.algorithms = []
         self.verbose = verbose
@@ -71,14 +84,28 @@ class CompetitiveManager:
         # storage for population qualities
         self.population_qualities_history = []
 
-        # prepare tmp storage for results of coevolution
-        os.makedirs('tmp', exist_ok=True)
-        self.path_to_tmp_history = Path(
-            'tmp',
-            experiment_name,
-            self.__get_meta_name()
-        )
-        os.makedirs(self.path_to_tmp_history, exist_ok=True)
+        self.algorithm_params = ''
+        if input_regex is not None:
+            if not isinstance(input_regex, str):
+                input_regex = input_regex.pattern
+        self.input_regex = input_regex
+        self.input_metric = input_metric
+
+        if self._saving_schema == 'file':
+            # prepare tmp storage for results of coevolution
+            os.makedirs('tmp', exist_ok=True)
+            self.path_to_tmp_history = Path(
+                'tmp',
+                experiment_name,
+                self.__get_meta_name()
+            )
+            os.makedirs(self.path_to_tmp_history, exist_ok=True)
+        elif self._saving_schema == 'db':
+            # prepare database for saving
+            self.db = DBRepository(
+                database_url='sqlite:///coevolution.db',
+                entity_meta=EntityMeta,
+            )
 
     def __get_meta_name(self):
         return f'comp_coev' \
@@ -87,29 +114,31 @@ class CompetitiveManager:
                f'_res{self.shared_resource}'
 
     def __save_history(self):
-        alg_history = parse_history(
-            self.algorithm_history,
-            is_visualize=False
-        )
-        for i, algorithm in enumerate(self.get_algorithm_names()):
-            os.makedirs(Path(
-                self.path_to_tmp_history,
-                algorithm,
-            ), exist_ok=True)
-            for metric_key in self._statistic_dict:
-                data = alg_history[i][metric_key]
-                with open(Path(
+        if self._saving_schema == 'file':
+            alg_history = parse_history(
+                self.algorithm_history,
+                is_visualize=False
+            )
+            for i, algorithm in enumerate(self.get_algorithm_names()):
+                os.makedirs(Path(
                     self.path_to_tmp_history,
                     algorithm,
-                    self._statistic_dict[metric_key]
-                ), 'w') as history_file:
-                    history_file.write('\n'.join([str(x) for x in data]))
+                ), exist_ok=True)
+                for metric_key in self._statistic_dict:
+                    data = alg_history[i][metric_key]
+                    with open(Path(
+                            self.path_to_tmp_history,
+                            algorithm,
+                            self._statistic_dict[metric_key]
+                    ), 'w') as history_file:
+                        history_file.write('\n'.join([str(x) for x in data]))
 
     def save_algorithms_qualities(self):
-        with open(Path(self.path_to_tmp_history, 'qualities'), 'w') as qualities_file:
-            qualities_file.write(
-                '\n'.join([str(x) for x in self.population_qualities_history])
-            )
+        if self._saving_schema == 'file':
+            with open(Path(self.path_to_tmp_history, 'qualities'), 'w') as qualities_file:
+                qualities_file.write(
+                    '\n'.join([str(x) for x in self.population_qualities_history])
+                )
 
     def get_current_winner(self) -> Tuple:
         winner = None
@@ -170,6 +199,8 @@ class CompetitiveManager:
             )
         )
 
+        self.algorithm_params += f'{str(init_params)}; '
+
     def __termination_criteria(self) -> bool:
         return self.shared_resource > 0
 
@@ -196,13 +227,25 @@ class CompetitiveManager:
         algorithm_names = [x[0] for x in self.algorithms]
         algorithm_scores = []
 
-        for algorithm in algorithm_names:
+        for i, algorithm in enumerate(algorithm_names):
             q = 0
             for k in range(self.adaptive_interval - 1):
                 q_k = (self.adaptive_interval - k) / (k + 1)
                 q_k *= 1 if self.winners_history[-(k + 1)][0] == algorithm else 0
                 q += q_k
             algorithm_scores.append(q)
+
+            # write to db
+            self.db.create_alg_quality(
+                quality=Qualities(
+                    experiment_name=self.__get_meta_name(),
+                    algorithm_name=algorithm,
+                    iteration=self.algorithm_population_numbers[i],
+                    quality=q,
+                    created_at=str(datetime.datetime.now())
+                )
+            )
+
         self.population_qualities_history.append(
             tuple(algorithm_scores)
         )
@@ -252,6 +295,34 @@ class CompetitiveManager:
             individual=winner_population[winner_ind_index]
         )
 
+        algorithm_names = self.get_algorithm_names()
+
+        alg_name_db = algorithm_names[0] if len(algorithm_names) == 1 else f'{algorithm_names[0].split("_")[0]}_coev'
+
+        if not isinstance(winner_regex, str):
+            output_regex = winner_regex.pattern
+        else:
+            output_regex = winner_regex
+
+        # write to db
+        self.db.create_experiment(
+            meta=Experiment(
+                experiment_name=self.__get_meta_name(),
+                algorithm_name=alg_name_db,
+                is_coevolution=0 if len(algorithm_names) == 1 else 1,
+                algorithm_params=self.algorithm_params,
+                adaptation_interval=self.adaptive_interval,
+                shared_resource=self.shared_resource,
+                penalty=self.penalty,
+                social_card=self.social_card,
+                input_regex=self.input_regex,
+                input_metric=self.input_metric,
+                output_regex=output_regex,
+                output_metric=winner_population[winner_ind_index].fitness.values[0],
+                created_at=str(datetime.datetime.now())
+            )
+        )
+
         return [winner_regex, winner_population[winner_ind_index].fitness.values[0]]
 
     def get_winner_statistics(self):
@@ -279,12 +350,32 @@ class CompetitiveManager:
             log_string += f'\tcv: {self.algorithm_statistics[i][6]}'
             log_string += f'\tinvalid number: {self.algorithm_statistics[i][7]}'
             algorithms_strings.append(log_string)
-        print(
-            '#' * (max_logger_header_length - (len(phase) + 1)),
-            f'{self.algorithm_population_numbers[0]} - {phase}'
-        )
-        for algorithm_string in algorithms_strings:
-            print(algorithm_string)
+
+            # write to db
+            self.db.create_statistic_cross(
+                statistic=Statistics(
+                    experiment_name=self.__get_meta_name(),
+                    algorithm_name=algorithm,
+                    iteration=self.algorithm_population_numbers[i],
+                    minimum=self.algorithm_statistics[i][1],
+                    maximum=self.algorithm_statistics[i][2],
+                    average=self.algorithm_statistics[i][3],
+                    median=self.algorithm_statistics[i][5],
+                    stdev=self.algorithm_statistics[i][4],
+                    invalid_ind=self.algorithm_statistics[i][7],
+                    length=self.algorithm_statistics[i][0],
+                    cv=self.algorithm_statistics[i][6],
+                    created_at=str(datetime.datetime.now())
+                )
+            )
+
+        if self.verbose:
+            print(
+                '#' * (max_logger_header_length - (len(phase) + 1)),
+                f'{self.algorithm_population_numbers[0]} - {phase}'
+            )
+            for algorithm_string in algorithms_strings:
+                print(algorithm_string)
 
     def __run_population(
             self,
@@ -335,11 +426,10 @@ class CompetitiveManager:
             self.algorithm_history[i] = [self.algorithm_statistics[i]]
 
         # first metrics
-        if self.verbose:
-            self.print_population_statistic(
-                algorithm_names=algorithm_names,
-                phase='init'
-            )
+        self.print_population_statistic(
+            algorithm_names=algorithm_names,
+            phase='init'
+        )
 
         social_lengths = [
             int(len(x.population) * self.social_card)
@@ -355,11 +445,10 @@ class CompetitiveManager:
                 self.algorithm_population_numbers[i] += 1
 
             # adaptation metrics
-            if self.verbose:
-                self.print_population_statistic(
-                    algorithm_names=algorithm_names,
-                    phase='adaptation'
-                )
+            self.print_population_statistic(
+                algorithm_names=algorithm_names,
+                phase='adaptation'
+            )
 
             winner, winner_score = self.get_current_winner()
 
@@ -379,11 +468,10 @@ class CompetitiveManager:
                 self.algorithm_population_numbers[i] += 1
 
             # coevolutionary metrics
-            if self.verbose:
-                self.print_population_statistic(
-                    algorithm_names=algorithm_names,
-                    phase='coevolution'
-                )
+            self.print_population_statistic(
+                algorithm_names=algorithm_names,
+                phase='coevolution'
+            )
 
             winner, winner_score = self.get_current_winner()
 
@@ -406,6 +494,10 @@ class CompetitiveManager:
 
         print(f'Done in {round(time.time() - t0, 3)} seconds')
         self.__save_history()
+        _best = self.get_best_individual()
+        if not isinstance(_best[0], str):
+            _best[0] = _best[0].pattern
+        print(f'Best individual: {_best}')
 
     @staticmethod
     def _get_algorithm() -> str:
