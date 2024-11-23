@@ -21,8 +21,21 @@ def de_evaluate(
         X: List,
         Y: List,
         translator: ILtoRegexTranslator,
-        n_iter: int
+        metric_type: int,
+        n_iter: int,
 ):
+    match metric_type:
+        case 1:
+            metric_calculate = Metrics.get_accuracy
+        case 2:
+            metric_calculate = Metrics.get_precision
+        case 3:
+            metric_calculate = Metrics.get_recall
+        case 4:
+            metric_calculate = Metrics.get_f1_score
+        case _:
+            raise AttributeError
+
     if not isinstance(individual, List):
         individual = individual.tolist()
 
@@ -35,30 +48,40 @@ def de_evaluate(
         return STUB_VALUE,
     regex_string = res[0]
 
-    # count accuracy metric
-    accuracy = []
+    # count metric
+    preds = []
+    labels = []
     try:
         for x, y in zip(X, Y):
-            accuracy.append(
-                Metrics.get_match_accuracy(
-                    regex=re.compile(regex_string),
-                    phrase=x,
-                    result=y
-                )
+            pred = Metrics.get_match_accuracy(
+                regex=re.compile(regex_string),
+                phrase=x,
+                result=y
             )
-        accuracy = sum(accuracy) / len(accuracy)
+            preds.append(pred)
+        for label in Y:
+            if label is None:
+                labels.append(0)
+            else:
+                labels.append(1)
+        tp, fp, fn, tn = Metrics.get_errors_matrix(
+            y_true=labels,
+            y_pred=preds,
+        )
+        metric = metric_calculate(tp=tp, fp=fp, fn=fn, tn=tn)
+
         if __SCHEMA == 1:
             res_metric = float(
                 Metrics.get_performance_metric(
                     regex=re.compile(regex_string),
                     n_iter=n_iter,
                     test_strings=X
-                )) / accuracy
+                )) / metric
         else:
             res_metric = float(
                 Metrics.get_readability(
                     regex_string=regex_string,
-                )) / accuracy
+                )) / metric
     except Exception as e:
         res_metric = STUB_VALUE
     return res_metric,
@@ -72,6 +95,7 @@ class DEAlgorithm:
             X: List,
             Y: List,
             n_iter: int,
+            metric_type: int
     ):
 
         # de inner storages
@@ -84,6 +108,7 @@ class DEAlgorithm:
         self.__select_number = 3
 
         self.n_iter = n_iter
+        self.metric_type = metric_type
 
         # X and Y for test dataset
         self.X = X
@@ -140,7 +165,8 @@ class DEAlgorithm:
             de_evaluate,
             X=self.X,
             Y=self.Y,
-            translator=self.translator
+            translator=self.translator,
+            metric_type=self.metric_type,
         )
         return toolbox
 

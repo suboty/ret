@@ -6,6 +6,57 @@ from functools import partial
 
 class Metrics:
     @staticmethod
+    def get_errors_matrix(
+            y_true,
+            y_pred,
+    ):
+        tp = 0
+        fp = 0
+        fn = 0
+        tn = 0
+        for true, pred in zip(y_true, y_pred):
+            if pred == 1:
+                if true == pred:
+                    tp += 1
+                else:
+                    fp += 1
+            elif pred == 0:
+                if true == pred:
+                    tn += 1
+                else:
+                    fn += 1
+            else:
+                raise AttributeError
+        return tp, fp, fn, tn
+
+    @staticmethod
+    def get_accuracy(tp, fp, fn, tn):
+        return (tp + tn) / (tp + fp + fn + tn)
+
+    @staticmethod
+    def get_precision(tp, fp, **kwargs):
+        if (tp + fp) != 0:
+            return tp / (tp + fp)
+        else:
+            return 0.
+
+    @staticmethod
+    def get_recall(tp, fn, **kwargs):
+        if (tp + fn) != 0:
+            return tp / (tp + fn)
+        else:
+            return 0.
+
+    @staticmethod
+    def get_f1_score(tp, fp, fn, **kwargs):
+        _precision = Metrics.get_precision(tp, fp)
+        _recall = Metrics.get_recall(tp, fn)
+        if (_precision + _recall) != 0:
+            return 2 * (_precision * _recall) / (_precision + _recall)
+        else:
+            return 0.
+
+    @staticmethod
     def get_match_accuracy(regex, phrase, result):
         try:
             reg_result = regex.match(phrase).group()

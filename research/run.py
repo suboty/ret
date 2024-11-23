@@ -8,10 +8,96 @@ from coevolutionary.utils.terminals import get_terminals
 from coevolutionary.manager import CompetitiveManager
 from coevolutionary.metrics import Metrics
 from coevolutionary.algorithms.gep import GEPAlgorithm
+from coevolutionary.algorithms.de import DEAlgorithm
 from coevolutionary.utils.tests import check_wilcoxon
 
+# optimization variant '(abcd?|dcba?)[0-9]'
+INPUT_REGEX = '(abcd|abc|dcba|dcb)|(abcd[0-9]|abc[0-9]|dcba[0-9]|dcb[0-9])'
 
-INPUT_REGEX = '((((a|bb?)|(a|ba?)|([0-9]|.ab))|(cd|dc|ce|de).ab)|(dc))?abc'
+ALGORITHMS = [
+    # GEP
+    {
+        'type': 'gep',
+        'population_length': 10,
+        'genes_n': 3,
+        'head_n': 2,
+        'n_elites': 1,
+        'metric_type': 1,
+    },
+    {
+        'type': 'gep',
+        'population_length': 10,
+        'genes_n': 3,
+        'head_n': 2,
+        'n_elites': 1,
+        'metric_type': 2,
+    },
+    {
+        'type': 'gep',
+        'population_length': 10,
+        'genes_n': 3,
+        'head_n': 2,
+        'n_elites': 1,
+        'metric_type': 3,
+    },
+    {
+        'type': 'gep',
+        'population_length': 10,
+        'genes_n': 3,
+        'head_n': 2,
+        'n_elites': 1,
+        'metric_type': 4,
+    },
+    # DE
+    {
+        'type': 'de',
+        'ndim': 10 * 2,
+        'bounds': [0, 11],
+        'cr': 0.45,
+        'f': 1.0,
+        'mu': 10,
+        'metric_type': 1,
+    },
+    {
+        'type': 'de',
+        'ndim': 10 * 2,
+        'bounds': [0, 11],
+        'cr': 0.45,
+        'f': 1.0,
+        'mu': 10,
+        'metric_type': 2,
+    },
+    {
+        'type': 'de',
+        'ndim': 10 * 2,
+        'bounds': [0, 11],
+        'cr': 0.45,
+        'f': 1.0,
+        'mu': 10,
+        'metric_type': 3,
+    },
+    {
+        'type': 'de',
+        'ndim': 10 * 2,
+        'bounds': [0, 11],
+        'cr': 0.45,
+        'f': 1.0,
+        'mu': 10,
+        'metric_type': 4
+    },
+]
+
+_excluded_algorithms = ['gep']
+
+
+CM_MANAGER_PARAMETERS = [
+    {
+        'shared_resource': 1000,
+        'social_card': 0.2,
+        'penalty': 0.1,
+        'adaptive_interval': 5
+    },
+]
 
 
 def get_init_data():
@@ -33,19 +119,18 @@ def get_init_data():
         5: 'altgroup',
         6: 'group',
         7: 'range',
-        8: 'escape',
 
         # terminals (get by input regex)
-        9: 'a',
-        10: 'b',
-        11: 'c',
-        12: 'd',
-        13: 'e'
+        8: 'a',
+        9: 'b',
+        10: 'c',
+        11: 'd',
     }
 
     test_strings = Utils.get_test_strings(
         input_regex=input_regex,
-        n_fuzzy_strings=5
+        n_fuzzy_strings=5,
+        terminals=['a', 'b', 'c', 'd'],
     )
 
     init_metric = Metrics.get_performance_metric(
@@ -64,7 +149,7 @@ def get_init_data():
         add_digits=False,
         add_lower_latin_letters=False,
         add_custom_symbols=True,
-        custom_symbols=['a', 'b', 'c', 'd', 'any', 'range', 'escape']
+        custom_symbols=['a', 'b', 'c', 'd', 'any', 'range']
     )
 
     return init_metric, _params, _nodes, _X, _Y, _terminals
@@ -84,67 +169,59 @@ def add_alg(manager, name, case, alg_object):
     return manager
 
 
+def choose_algorithm(
+        rows,
+        labels,
+        _terminals,
+        _params,
+        _nodes,
+        _algorithm_params,
+):
+    _alg_object = None
+    match _algorithm_params.get("type"):
+        case 'gep':
+            _alg_object = GEPAlgorithm(
+                X=rows,
+                Y=labels,
+                n_iter=100,
+                terminals=_terminals,
+                params=_params,
+                metric_type=_algorithm_params.get('metric_type')
+            )
+        case 'de':
+            _alg_object = DEAlgorithm(
+                nodes=_nodes,
+                params=_params,
+                X=X,
+                Y=Y,
+                n_iter=100,
+                metric_type=_algorithm_params.get('metric_type')
+            )
+        case _:
+            raise NotImplementedError
+    return _alg_object
+
+
 if __name__ == '__main__':
     random.seed(456)
 
     INIT_METRIC, params, nodes, X, Y, terminals = get_init_data()
 
-    gep_params_cases = [
-        {'population_length': 10, 'genes_n': 3, 'head_n': 2, 'n_elites': 1},
-    ]
-
-    cm_manager_params = [
-        {'shared_resource': 400, 'social_card': 0.2, 'penalty': 0.1, 'adaptive_interval': 5},
-    ]
-
     numbers_of_individual_alg = [3, 4, 5, 6]
     exp_counter = 0
 
     for number_of_individual_alg in numbers_of_individual_alg:
-        for _ in range(20):
-            for m_i, manager_case in enumerate(cm_manager_params):
+        for _ in range(10):
+            for m_i, manager_case in enumerate(CM_MANAGER_PARAMETERS):
                 print(f'### CM MANAGER PARAMS {m_i}')
                 exp_name = f'exp_{round(time.time())}'
 
-                print('### GEP ###')
-                print('\nCOEVOLUTION\n')
-                # coevolution
-                cm = CompetitiveManager(
-                    adaptive_interval=manager_case['adaptive_interval'],
-                    shared_resource=manager_case['shared_resource'],
-                    verbose=False,
-                    problem='min',
-                    survive_schema='best',
-                    social_card=manager_case['social_card'],
-                    penalty=manager_case['penalty'],
-                    experiment_name=str(exp_counter),
-                    input_regex=INPUT_REGEX,
-                    input_metric=INIT_METRIC
-                )
-
-                for i, _ in enumerate(range(number_of_individual_alg)):
-                    gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
-                    cm = add_alg(
-                        manager=cm,
-                        name=f'gep_{i}_coev',
-                        case=gep_params_cases[0],
-                        alg_object=gep_object
-                    )
-                cm.run_coevolution()
-
-                coevolution_algorithm_history = cm.algorithm_history
-                population_qualities_history = cm.population_qualities_history
-                coev_names = cm.get_algorithm_names()
-                best_alg_statistics = cm.get_winner_statistics()
-
-                cm.save_algorithms_qualities()
-
-                # separately
-                print('\nSEPARATELY\n')
-                separately_algorithm_history = {}
-                sep_names = []
-
-                for i, _ in enumerate(range(number_of_individual_alg)):
+                for algorithm in ALGORITHMS:
+                    if algorithm.get('type') in _excluded_algorithms:
+                        continue
+                    print(f'### {algorithm.get("type"): <5} ###')
+                    print('\nCOEVOLUTION\n')
+                    # coevolution
                     cm = CompetitiveManager(
                         adaptive_interval=manager_case['adaptive_interval'],
                         shared_resource=manager_case['shared_resource'],
@@ -158,30 +235,84 @@ if __name__ == '__main__':
                         input_metric=INIT_METRIC
                     )
 
-                    gep_object = GEPAlgorithm(X=X, Y=Y, n_iter=100, terminals=terminals, params=params, )
+                    for i, _ in enumerate(range(number_of_individual_alg)):
+                        alg_object = choose_algorithm(
+                            rows=X,
+                            labels=Y,
+                            _terminals=terminals,
+                            _params=params,
+                            _nodes=nodes,
+                            _algorithm_params=algorithm,
+                        )
 
-                    cm = add_alg(
-                        manager=cm,
-                        name=f'gep_{i}_sep',
-                        case=gep_params_cases[0],
-                        alg_object=gep_object
-                    )
-
-                    # overload run
+                        cm = add_alg(
+                            manager=cm,
+                            name=f'{algorithm.get("type")}_{i}_coev_metric_{algorithm.get("metric_type")}',
+                            case=algorithm,
+                            alg_object=alg_object
+                        )
                     cm.run_coevolution()
 
-                    separately_algorithm_history[i] = cm.algorithm_history[0]
-                    sep_names.append(f'gep_{i}_sep')
+                    coevolution_algorithm_history = cm.algorithm_history
+                    population_qualities_history = cm.population_qualities_history
+                    coev_names = cm.get_algorithm_names()
+                    best_alg_statistics = cm.get_winner_statistics()
 
-                    check_wilcoxon(
-                        history_a=cm.algorithm_history,
-                        history_b=best_alg_statistics,
-                        a_name=f'gep_{i}_sep',
-                        b_name=f'best of coevolutionary gep',
-                        a_index=0,
-                        b_index=i,
-                        metric_number=1,
-                        metric_name='minimum'
-                    )
+                    cm.save_algorithms_qualities()
+
+                    # separately
+                    print('\nSEPARATELY\n')
+                    separately_algorithm_history = {}
+                    sep_names = []
+
+                    for i, _ in enumerate(range(number_of_individual_alg)):
+                        cm = CompetitiveManager(
+                            adaptive_interval=manager_case['adaptive_interval'],
+                            shared_resource=manager_case['shared_resource'],
+                            verbose=False,
+                            problem='min',
+                            survive_schema='best',
+                            social_card=manager_case['social_card'],
+                            penalty=manager_case['penalty'],
+                            experiment_name=str(exp_counter),
+                            input_regex=INPUT_REGEX,
+                            input_metric=INIT_METRIC
+                        )
+
+                        alg_object = choose_algorithm(
+                            rows=X,
+                            labels=Y,
+                            _terminals=terminals,
+                            _params=params,
+                            _nodes=nodes,
+                            _algorithm_params=algorithm,
+                        )
+
+                        cm = add_alg(
+                            manager=cm,
+                            name=f'{algorithm.get("type")}_{i}_sep_metric_{algorithm.get("metric_type")}',
+                            case=algorithm,
+                            alg_object=alg_object
+                        )
+
+                        # overload run
+                        cm.run_coevolution()
+
+                        separately_algorithm_history[i] = cm.algorithm_history[0]
+                        sep_names.append(f'{algorithm.get("type")}_{i}')
+
+                        try:
+                            check_wilcoxon(
+                                history_a=cm.algorithm_history,
+                                history_b=best_alg_statistics,
+                                a_name=f'{algorithm.get("type")}_{i}_sep',
+                                b_name=f'best of coevolutionary {algorithm.get("type")}',
+                                a_index=0,
+                                b_index=i,
+                                metric_number=1,
+                                metric_name='minimum'
+                            )
+                        except ValueError:
+                            print('Error! x - y is zero for all elements')
 
         exp_counter += 1

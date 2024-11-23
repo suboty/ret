@@ -298,7 +298,7 @@ class CompetitiveManager:
 
         algorithm_names = self.get_algorithm_names()
 
-        alg_name_db = algorithm_names[0] if len(algorithm_names) == 1 else f'{algorithm_names[0].split("_")[0]}_coev'
+        alg_name_db = algorithm_names[0]
 
         if not isinstance(winner_regex, str):
             output_regex = winner_regex.pattern

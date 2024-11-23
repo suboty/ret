@@ -1,4 +1,5 @@
 import re
+import random
 from typing import Callable, List, Dict
 
 import exrex
@@ -52,12 +53,30 @@ class Utils:
     def get_test_strings(
             input_regex: str,
             n_fuzzy_strings: int,
+            terminals: List,
     ):
-        return list(
+        # positive strings
+        pos_strings = list(
             exrex.generate(
                 input_regex,
                 limit=n_fuzzy_strings)
         )
+        # negative strings
+        _neg_input_regex = ''
+        for symbol in input_regex:
+            if symbol in terminals:
+                if random.randint(0, 10) > 5:
+                    _symbol = random.choice(terminals)
+                    _neg_input_regex += _symbol
+                    continue
+            _neg_input_regex += symbol
+
+        neg_strings = list(
+            exrex.generate(
+                _neg_input_regex,
+                limit=n_fuzzy_strings)
+        )
+        return pos_strings + neg_strings
 
     @staticmethod
     def create_training_set(
