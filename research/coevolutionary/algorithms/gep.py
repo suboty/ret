@@ -52,9 +52,22 @@ def gep_evaluate(
     X: List,
     Y: List,
     n_iter: int,
+    metric_type: int,
     terminals: List,
     params: Dict,
 ):
+    match metric_type:
+        case 1:
+            metric_calculate = Metrics.get_accuracy
+        case 2:
+            metric_calculate = Metrics.get_precision
+        case 3:
+            metric_calculate = Metrics.get_recall
+        case 4:
+            metric_calculate = Metrics.get_f1_score
+        case _:
+            raise AttributeError
+
     res = ETtoRegexTranslator.regex_compile(
         individual=individual,
         terminals=terminals,
@@ -72,24 +85,35 @@ def gep_evaluate(
             return STUB_VALUE,
 
     regex = res[0]
-    # count accuracy metric
-    accuracy = []
+    # count metric
+    preds = []
+    labels = []
+
     for x, y in zip(X, Y):
-        accuracy.append(
-            Metrics.get_match_accuracy(
-                regex=regex,
-                phrase=x,
-                result=y
-            )
+        pred = Metrics.get_match_accuracy(
+            regex=regex,
+            phrase=x,
+            result=y
         )
+        preds.append(pred)
     try:
-        accuracy = sum(accuracy) / len(accuracy)
-        res_metric = (2 - accuracy) * float(
+        for label in Y:
+            if label is None:
+                labels.append(0)
+            else:
+                labels.append(1)
+        tp, fp, fn, tn = Metrics.get_errors_matrix(
+            y_true=labels,
+            y_pred=preds,
+        )
+        metric = metric_calculate(tp=tp, fp=fp, fn=fn, tn=tn)
+
+        res_metric = float(
             Metrics.get_performance_metric(
                 regex=regex,
                 n_iter=n_iter,
                 test_strings=X
-            ))
+            )) / metric
     except ZeroDivisionError:
         res_metric = STUB_VALUE
 
@@ -104,6 +128,7 @@ class GEPAlgorithm:
             terminals: List,
             params: Dict,
             n_iter: int,
+            metric_type: int,
     ):
 
         # gep params
@@ -122,6 +147,8 @@ class GEPAlgorithm:
         self.elites = None
         self.offspring = None
         self.pset = self.create_primitives_set()
+
+        self.metric_type = metric_type
 
         # X and Y for test dataset
         self.X = X
@@ -172,6 +199,7 @@ class GEPAlgorithm:
             Y=self.Y,
             terminals=self.terminals,
             params=self.params,
+            metric_type=self.metric_type
         )
         return toolbox
 
