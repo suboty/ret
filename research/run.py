@@ -11,7 +11,7 @@ from coevolutionary.algorithms.gep import GEPAlgorithm
 from coevolutionary.algorithms.de import DEAlgorithm
 from coevolutionary.utils.tests import check_wilcoxon
 
-# optimization variant '(abcd?|dcba?)[0-9]'
+# optimization variant '(abcd?|dcba?)[0-9]?'
 INPUT_REGEX = '(abcd|abc|dcba|dcb)|(abcd[0-9]|abc[0-9]|dcba[0-9]|dcb[0-9])'
 
 ALGORITHMS = [
@@ -92,8 +92,8 @@ _excluded_algorithms = ['gep']
 
 CM_MANAGER_PARAMETERS = [
     {
-        'shared_resource': 1000,
-        'social_card': 0.2,
+        'shared_resource': 500,
+        'social_card': 0.3,
         'penalty': 0.1,
         'adaptive_interval': 5
     },
