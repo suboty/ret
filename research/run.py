@@ -1,5 +1,4 @@
 import re
-import time
 import random
 
 from coevolutionary.utils import Utils
@@ -87,7 +86,7 @@ ALGORITHMS = [
     },
 ]
 
-_excluded_algorithms = ['gep']
+_excluded_algorithms = ['de']
 
 
 CM_MANAGER_PARAMETERS = [
@@ -210,11 +209,12 @@ if __name__ == '__main__':
     numbers_of_individual_alg = [3, 4, 5, 6]
     exp_counter = 0
 
-    for number_of_individual_alg in numbers_of_individual_alg:
-        for _ in range(10):
+    for _ in range(10):
+        exp_counter = 0
+        for number_of_individual_alg in numbers_of_individual_alg:
+            exp_counter += 1
             for m_i, manager_case in enumerate(CM_MANAGER_PARAMETERS):
                 print(f'### CM MANAGER PARAMS {m_i}')
-                exp_name = f'exp_{round(time.time())}'
 
                 for algorithm in ALGORITHMS:
                     if algorithm.get('type') in _excluded_algorithms:
@@ -314,5 +314,3 @@ if __name__ == '__main__':
                             )
                         except ValueError:
                             print('Error! x - y is zero for all elements')
-
-        exp_counter += 1

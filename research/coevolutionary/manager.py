@@ -300,10 +300,14 @@ class CompetitiveManager:
 
         alg_name_db = algorithm_names[0]
 
-        if not isinstance(winner_regex, str):
-            output_regex = winner_regex.pattern
-        else:
-            output_regex = winner_regex
+        try:
+            if not isinstance(winner_regex, str):
+                output_regex = winner_regex.pattern
+            else:
+                output_regex = winner_regex
+        except AttributeError:
+            print('Error while optimizing!')
+            output_regex = '__error'
 
         # write to db
         self.db.create_experiment(
@@ -496,9 +500,12 @@ class CompetitiveManager:
         print(f'Done in {round(time.time() - t0, 3)} seconds')
         self.__save_history()
         _best = self.get_best_individual()
-        if not isinstance(_best[0], str):
-            _best[0] = _best[0].pattern
-        print(f'Best individual: {_best}')
+        try:
+            if not isinstance(_best[0], str):
+                _best[0] = _best[0].pattern
+            print(f'Best individual: {_best}')
+        except AttributeError:
+            pass
 
     @staticmethod
     def _get_algorithm() -> str:
