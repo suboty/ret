@@ -1,0 +1,11 @@
+graph {
+	1 [label=range]
+	2 [label=repeat]
+	3 [label=repeat]
+	4 [label=any]
+	0 [label=group]
+	2 -- 3
+	3 -- 4
+	0 -- 1
+	0 -- 2
+}
